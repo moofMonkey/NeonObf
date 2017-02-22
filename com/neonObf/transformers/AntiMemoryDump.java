@@ -11,7 +11,7 @@ import org.objectweb.asm.tree.MethodNode;
 /**
  * BETA
  * @author moofMonkey
- *
+ * At moment (22.02.2017) this is abadoned module. I don't have enough time
  */
 public class AntiMemoryDump extends Transformer {
 	public AntiMemoryDump(MethodNode _mn) {

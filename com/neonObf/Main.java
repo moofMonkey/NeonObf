@@ -87,7 +87,7 @@ public class Main extends Thread implements Opcodes {
 				
 				break;
 			case 2:
-				if (!(f = new File(arg)).exists())
+				if (!(f = new File(arg)).exists() && !arg.equalsIgnoreCase("null"))
 					throw new Throwable(".JAR/.class/folder with libraries must exists! (it can be empty folder or \'null\')");
 				
 				break; // If debugger is present - we don't need to bug all program.

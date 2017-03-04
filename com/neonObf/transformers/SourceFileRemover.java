@@ -21,7 +21,7 @@ public class SourceFileRemover extends Transformer {
 
 	@Override
 	public void run() {
-		parent.sourceFile = nameGen.get(rand.nextInt());
+		parent.sourceFile = nameGen.get(rand.nextInt(100));
 	}
 
 	@Override

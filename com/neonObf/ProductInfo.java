@@ -1,7 +1,7 @@
 package com.neonObf;
 
 /**
- * This class meeded for GIO. Do not delete.
+ * This class meeded for GUI. Do not delete.
  */
 public class ProductInfo {
 	public static String getTitle() {

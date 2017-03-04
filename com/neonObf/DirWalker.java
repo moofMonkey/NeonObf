@@ -1,5 +1,6 @@
 package com.neonObf;
 
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -19,11 +20,10 @@ public class DirWalker {
 			final ClassNode node = new ClassNode();
 
 			reader.accept(node, mode);
-			for (int i = 0; i < node.methods.size(); ++i) {
+			for(int i = 0; i < node.methods.size(); ++i) {
 				final MethodNode methodNode2 = node.methods.get(i);
-				final JSRInlinerAdapter adapter = new JSRInlinerAdapter(methodNode2, methodNode2.access,
-						methodNode2.name, methodNode2.desc, methodNode2.signature,
-						methodNode2.exceptions.<String> toArray(new String[0]));
+				final JSRInlinerAdapter adapter = new JSRInlinerAdapter(methodNode2, methodNode2.access, methodNode2.name, methodNode2.desc, methodNode2.signature, methodNode2.exceptions
+						.<String> toArray(new String[0]));
 				methodNode2.accept(adapter);
 				node.methods.set(i, adapter);
 			}
@@ -32,7 +32,7 @@ public class DirWalker {
 			Main.getInstance().hmSCN2.put(node, node.name);
 
 			return node;
-		} catch (Throwable t) {
+		} catch(Throwable t) {
 			t.printStackTrace();
 			return null;
 		}
@@ -43,18 +43,21 @@ public class DirWalker {
 		String path = file.getAbsolutePath();
 		if (file.isDirectory()) {
 			if (file.listFiles() != null && !path.endsWith(".donot"))
-				for (File f : file.listFiles())
+				for(File f : file.listFiles())
 					if (!(f.getName().charAt(0) == '.' || f.getName().charAt(0) == '$'))
 						new DirWalker(f, mode, addToClassList);
-		} else if (file.isFile() && name.lastIndexOf('.') > -1 && (name.endsWith("jar") || name.endsWith("class"))) {
-			if (name.endsWith("jar"))
-				bruteZipFile(new File(path), mode, addToClassList);
-			if (name.endsWith("class")) {
-				ClassNode cn = loadClass(new FileInputStream(path), mode);
-				if (addToClassList)
-					Main.getInstance().classes.add(cn);
+		} else
+			if (file.isFile() && name.lastIndexOf('.') > -1
+					&& (name.endsWith("jar") || name.endsWith("class"))) {
+				if (name.endsWith("jar"))
+					bruteZipFile(new File(path), mode, addToClassList);
+				if (name.endsWith("class")) {
+					ClassNode cn = loadClass(new FileInputStream(path), mode);
+					if (addToClassList)
+						Main.getInstance().classes.add(cn);
+					System.out.println(cn.name + " " + file.getPath());
+				}
 			}
-		}
 	}
 
 	public void bruteZipFile(File f, int mode, boolean addToClassList) throws Throwable {
@@ -67,10 +70,12 @@ public class DirWalker {
 					ClassNode cn = loadClass(zipIn.getInputStream(next), mode);
 					if (addToClassList)
 						Main.getInstance().classes.add(cn);
-				} else if (next.isDirectory())
-					continue;
+				} else
+					if (next.isDirectory())
+						continue;
 			}
 			zipIn.close();
-		} catch(Throwable t) {  }
+		} catch(Throwable t) {
+		}
 	}
 }

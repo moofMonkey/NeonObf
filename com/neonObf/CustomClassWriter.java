@@ -1,5 +1,6 @@
 package com.neonObf;
 
+
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,58 +17,62 @@ import org.objectweb.asm.tree.ClassNode;
 
 public class CustomClassWriter extends ClassWriter {
 	private static Map<String, ClassTree> hierachy = new HashMap<>();
-	
-    public static void loadHierachy() {
-        Set<String> processed = new HashSet<>();
-        LinkedList<ClassNode> toLoad = new LinkedList<>();
-        toLoad.addAll(Main.getInstance().hmSCN.values());
-        while (!toLoad.isEmpty()) {
-        	ClassNode poll = toLoad.poll();
-        	
-            for (ClassNode toProcess : loadHierachy(poll)) {
-                if (processed.add(toProcess.name)) {
-                    toLoad.add(toProcess);
-                }
-            }
-        }
-    }
-    
-    public static List<ClassNode> loadHierachy(ClassNode specificNode) {
-    	try {
-	        if (specificNode.name.equals("java/lang/Object")) {
-	            return Collections.emptyList();
-	        }
-	        if ((specificNode.access & Opcodes.ACC_INTERFACE) != 0) {
-	            getClassTree(specificNode.name).parentClasses.add("java/lang/Object");
-	            return Collections.emptyList();
-	        }
-	        List<ClassNode> toProcess = new ArrayList<>();
-	
-	        ClassTree thisTree = getClassTree(specificNode.name);
-	        ClassNode superClass = null;
-	    		superClass = assureLoaded(specificNode.superName);
-	        if (superClass == null) {
-	            throw new IllegalArgumentException("Could not load " + specificNode.name);
-	        }
-	        ClassTree superTree = getClassTree(superClass.name);
-	        superTree.subClasses.add(specificNode.name);
-	        thisTree.parentClasses.add(superClass.name);
-	        toProcess.add(superClass);
-	
-	        for (String interfaceReference : specificNode.interfaces) {
-	        	ClassNode interfaceNode = assureLoaded(interfaceReference);
-	            if (interfaceNode == null) {
-	                throw new IllegalArgumentException("Could not load " + interfaceReference);
-	            }
-	            ClassTree interfaceTree = getClassTree(interfaceReference);
-	            interfaceTree.subClasses.add(specificNode.name);
-	            thisTree.parentClasses.add(interfaceReference);
-	            toProcess.add(interfaceNode);
-	        }
-	        return toProcess;
-    	} catch(Throwable t) { System.err.println(specificNode.name); throw t; }
-    }
-	
+
+	public static void loadHierachy() {
+		Set<String> processed = new HashSet<>();
+		LinkedList<ClassNode> toLoad = new LinkedList<>();
+		toLoad.addAll(Main.getInstance().hmSCN.values());
+		while (!toLoad.isEmpty()) {
+			ClassNode poll = toLoad.poll();
+
+			for(ClassNode toProcess : loadHierachy(poll)) {
+				if (processed.add(toProcess.name)) {
+					toLoad.add(toProcess);
+				}
+			}
+		}
+	}
+
+	public static List<ClassNode> loadHierachy(ClassNode specificNode) {
+		try {
+			if (specificNode.name.equals("java/lang/Object")) {
+				return Collections.emptyList();
+			}
+			if ((specificNode.access & Opcodes.ACC_INTERFACE) != 0) {
+				getClassTree(specificNode.name).parentClasses.add("java/lang/Object");
+				return Collections.emptyList();
+			}
+			List<ClassNode> toProcess = new ArrayList<>();
+
+			ClassTree thisTree = getClassTree(specificNode.name);
+			ClassNode superClass = null;
+			superClass = assureLoaded(specificNode.superName);
+			if (superClass == null) {
+				throw new IllegalArgumentException("Could not load " + specificNode.name);
+			}
+			ClassTree superTree = getClassTree(superClass.name);
+			superTree.subClasses.add(specificNode.name);
+			thisTree.parentClasses.add(superClass.name);
+			toProcess.add(superClass);
+
+			for(String interfaceReference : specificNode.interfaces) {
+				ClassNode interfaceNode = assureLoaded(interfaceReference);
+				if (interfaceNode == null) {
+					throw new IllegalArgumentException("Could not load "
+							+ interfaceReference);
+				}
+				ClassTree interfaceTree = getClassTree(interfaceReference);
+				interfaceTree.subClasses.add(specificNode.name);
+				thisTree.parentClasses.add(interfaceReference);
+				toProcess.add(interfaceNode);
+			}
+			return toProcess;
+		} catch(Throwable t) {
+			System.err.println(specificNode.name);
+			throw t;
+		}
+	}
+
 	public CustomClassWriter(int flags) {
 		super(flags);
 	}
@@ -91,17 +96,20 @@ public class CustomClassWriter extends ClassWriter {
 		ClassNode second = assureLoaded(type2);
 		if (isAssignableFrom(type1, type2))
 			return type1;
-		else if (isAssignableFrom(type2, type1))
-			return type2;
-		else if (Modifier.isInterface(first.access) || Modifier.isInterface(second.access))
-			return "java/lang/Object";
-		else {
-			do {
-				type1 = first.superName;
-				first = assureLoaded(type1);
-			} while (!isAssignableFrom(type1, type2));
-			return type1;
-		}
+		else
+			if (isAssignableFrom(type2, type1))
+				return type2;
+			else
+				if (Modifier.isInterface(first.access)
+						|| Modifier.isInterface(second.access))
+					return "java/lang/Object";
+				else {
+					do {
+						type1 = first.superName;
+						first = assureLoaded(type1);
+					} while (!isAssignableFrom(type1, type2));
+					return type1;
+				}
 	}
 
 	private String getCommonSuperClass1(String type1, String type2) {
@@ -141,14 +149,14 @@ public class CustomClassWriter extends ClassWriter {
 			return true;
 		return false;
 	}
-	
-    public static ClassTree getClassTree(String classNode) {
-    	ClassTree tree = hierachy.get(classNode);
-        if (tree == null) {
-            tree = new ClassTree();
-            tree.thisClass = classNode;
-            hierachy.put(classNode, tree);
-        }
-        return tree;
-    }
+
+	public static ClassTree getClassTree(String classNode) {
+		ClassTree tree = hierachy.get(classNode);
+		if (tree == null) {
+			tree = new ClassTree();
+			tree.thisClass = classNode;
+			hierachy.put(classNode, tree);
+		}
+		return tree;
+	}
 }

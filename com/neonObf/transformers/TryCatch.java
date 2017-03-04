@@ -12,9 +12,6 @@ import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.tree.TryCatchBlockNode;
 
-import com.neonObf.Main;
-import com.neonObf.SmartNameGen;
-
 public class TryCatch extends Transformer {
 	public TryCatch(MethodNode _mn) {
 		super(_mn, null);

@@ -1,6 +1,11 @@
 # NeonObf
 NeonObf-uscator is start-up obfuscator
 
+# Base libraries
+P.S.: that's needed libraries that must be there are!
+
+https://yadi.sk/d/cdeIXPUM3G5uda
+
 ## Obfuscation examples
 Deprecated examples:
 

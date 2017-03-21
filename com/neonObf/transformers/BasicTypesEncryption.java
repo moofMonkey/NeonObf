@@ -279,7 +279,7 @@ public class BasicTypesEncryption extends Transformer {
 			makeDecryptorMethod (
 				cn,
 				nameGen.get (
-					0,
+					1,
 					cn.name
 				)
 			);

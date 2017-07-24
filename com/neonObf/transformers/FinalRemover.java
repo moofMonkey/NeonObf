@@ -17,7 +17,7 @@ public class FinalRemover extends Transformer {
 			ClassNode cn = classes.get(i);
 
 			for(int i2 = 0; i2 < cn.fields.size(); i2++) {
-				FieldNode fn = cn.fields.get(i2);
+				FieldNode fn = (FieldNode) cn.fields.get(i2);
 
 				if ((fn.access | ACC_FINAL) != 0)
 					fn.access &= ~ACC_FINAL;

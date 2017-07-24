@@ -55,7 +55,7 @@ public class CustomClassWriter extends ClassWriter {
 			thisTree.parentClasses.add(superClass.name);
 			toProcess.add(superClass);
 
-			for(String interfaceReference : specificNode.interfaces) {
+			for(String interfaceReference : (List<String>) specificNode.interfaces) {
 				ClassNode interfaceNode = assureLoaded(interfaceReference);
 				if (interfaceNode == null) {
 					throw new IllegalArgumentException("Could not load "

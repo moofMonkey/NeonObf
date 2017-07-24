@@ -2,6 +2,7 @@ package com.neonObf.transformers;
 
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -43,9 +44,9 @@ public class CodeHider extends Transformer {
 		for(int i = 0; i < classes.size(); i++) {
 			ClassNode cn = classes.get(i);
 
-			for(MethodNode mn : cn.methods)
+			for(MethodNode mn : (List<MethodNode>) cn.methods)
 				new CodeHider(mn).start();
-			for(FieldNode fn : cn.fields)
+			for(FieldNode fn : (List<FieldNode>) cn.fields)
 				new CodeHider(fn).start();
 
 			classes.set(i, cn);

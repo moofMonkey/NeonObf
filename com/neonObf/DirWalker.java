@@ -21,9 +21,8 @@ public class DirWalker {
 
 			reader.accept(node, mode);
 			for(int i = 0; i < node.methods.size(); ++i) {
-				final MethodNode methodNode2 = node.methods.get(i);
-				final JSRInlinerAdapter adapter = new JSRInlinerAdapter(methodNode2, methodNode2.access, methodNode2.name, methodNode2.desc, methodNode2.signature, methodNode2.exceptions
-						.<String> toArray(new String[0]));
+				final MethodNode methodNode2 = (MethodNode) node.methods.get(i);
+				final JSRInlinerAdapter adapter = new JSRInlinerAdapter(methodNode2, methodNode2.access, methodNode2.name, methodNode2.desc, methodNode2.signature, (String[]) methodNode2.exceptions.toArray(new String[0]));
 				methodNode2.accept(adapter);
 				node.methods.set(i, adapter);
 			}

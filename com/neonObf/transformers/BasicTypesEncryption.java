@@ -1,9 +1,6 @@
 package com.neonObf.transformers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.ListIterator;
-import java.util.Random;
+import java.util.*;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
@@ -284,7 +281,7 @@ public class BasicTypesEncryption extends Transformer {
 				)
 			);
 			for (int i2 = 0; i2 < cn.methods.size(); i2++) {
-				MethodNode mn = cn.methods.get(i2);
+				MethodNode mn = (MethodNode) cn.methods.get(i2);
 				new BasicTypesEncryption(mn, cn, rand.nextLong()).start();
 			}
 		}
@@ -293,7 +290,7 @@ public class BasicTypesEncryption extends Transformer {
 	}
 	
 	private static boolean hasInsnsToObf(ClassNode cn) {
-		for(MethodNode mn : cn.methods) {
+		for(MethodNode mn : (List<MethodNode>) cn.methods) {
 			ListIterator<AbstractInsnNode> iterator = mn.instructions.iterator();
 			while(iterator.hasNext()) {
 				AbstractInsnNode next = iterator.next();

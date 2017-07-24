@@ -2,6 +2,7 @@ package com.neonObf.transformers;
 
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.ListIterator;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
@@ -41,7 +42,7 @@ public class GotoFloodObfuscation extends Transformer {
 		for(int i = 0; i < classes.size(); i++) {
 			ClassNode cn = classes.get(i);
 
-			for(MethodNode mn : cn.methods)
+			for(MethodNode mn : (List<MethodNode>) cn.methods)
 				new GotoFloodObfuscation(mn).start();
 
 			classes.set(i, cn);

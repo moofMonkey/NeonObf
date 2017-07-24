@@ -7,11 +7,7 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -20,13 +16,16 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.util.CheckClassAdapter;
 
 import com.neonObf.transformers.*;
 
-public class Main extends Thread implements Opcodes {
+public class Main extends Thread {
 	private static Main instance;
+	public static final HashMap<String, Transformer> existTransformers = new HashMap<>();
+
 	public File inF, outF;
 	public ArrayList<ClassNode> classes = new ArrayList<ClassNode>();
 	public ArrayList<MyFile> files = new ArrayList<MyFile>();
@@ -39,10 +38,22 @@ public class Main extends Thread implements Opcodes {
 	 */
 	public HashMap<ClassNode, String> hmSCN2 = new HashMap<ClassNode, String>();
 	public ArrayList<File> paths = new ArrayList<File>();
-	public ArrayList<Transformer> transformers = new ArrayList<Transformer>();
+	public ArrayList<Transformer> usedTransformers = new ArrayList<Transformer>();
 	public HashMap<String, Integer> pkgLens = new HashMap<String, Integer>();
 	public SmartNameGen nameGen;
 	public String[] args;
+
+	static {
+		//existTransformers.put("AntiMemoryDump", new AntiMemoryDump());
+		existTransformers.put("BasicTypesEncryption", new BasicTypesEncryption());
+		existTransformers.put("CodeHider", new CodeHider());
+		existTransformers.put("FinalRemover", new FinalRemover());
+		existTransformers.put("GotoFloodObfuscation", new GotoFloodObfuscation());
+		existTransformers.put("LineNumberObfuscation", new LineNumberObfuscation());
+		existTransformers.put("LocalVariableNameObfuscator", new LocalVariableNameObfuscator());
+		existTransformers.put("SourceFileRemover", new SourceFileRemover());
+		existTransformers.put("TryCatch", new TryCatch());
+	}
 
 	public static Main getInstance() {
 		return instance;
@@ -51,7 +62,7 @@ public class Main extends Thread implements Opcodes {
 	private void checkArgs() throws Throwable {
 		if (args.length < 5) {
 			System.out
-					.println("Usage: java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <transformers> <min/norm/max");
+					.println("Usage: java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <transformers> <min/norm/max>");
 			throw new Throwable();
 		}
 
@@ -95,26 +106,24 @@ public class Main extends Thread implements Opcodes {
 				break;
 			case 2:
 				if (!(f = new File(arg)).exists() && !arg.equalsIgnoreCase("null"))
-					throw new Throwable(".JAR/.class/folder with libraries must exists! (it can be empty folder or \'null\')");
+					throw new Throwable(".JAR/.class/folder with libraries must exist! (it can be empty folder or \'null\')");
 
-				break; // If debugger is present - we don't need to bug all
-						// program.
+				break;
 			case 3:
-				for(String s : arg.split("[;]"))
-					transformers.add((Transformer) Class
-							.forName("com.neonObf.transformers." + s).newInstance());
+				for(String s : arg.split(";"))
+					usedTransformers.add(existTransformers.get(s));
 
 				break;
 			case 4:
-				if (args[4].equalsIgnoreCase("min"))
+				if (arg.equalsIgnoreCase("min"))
 					nameGen = new SmartNameGen("abcdefghijklmnopqrstuvwxyz"
 							+ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "_");
 				else
-					if (args[4].equalsIgnoreCase("norm"))
+					if (arg.equalsIgnoreCase("norm"))
 						nameGen = new SmartNameGen("abcdefghijklmnopqrstuvwxyz"
 								+ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "_.#{}");
 					else
-						if (args[4].equalsIgnoreCase("max"))
+						if (arg.equalsIgnoreCase("max"))
 							nameGen = new SmartNameGen("\r" + "\t");
 						else
 							throw new Throwable("Arg " + index + " is not valid. Arg is "
@@ -134,22 +143,14 @@ public class Main extends Thread implements Opcodes {
 	}
 
 	public static void printLogo() {
-		System.out
-				.println("|---------------------------------------------------------------------------|");
-		System.out
-				.println("|   __   __    ______    ______    __   __    ______    ______    ______    |");
-		System.out
-				.println("|  /\\ \"-.\\ \\  /\\  ___\\  /\\  __ \\  /\\ \"-.\\ \\  /\\  __ \\  /\\  == \\  /\\  ___\\   |");
-		System.out
-				.println("|  \\ \\ \\-.  \\ \\ \\  __\\  \\ \\ \\/\\ \\ \\ \\ \\-.  \\ \\ \\ \\/\\ \\ \\ \\  __<  \\ \\  __\\   |");
-		System.out
-				.println("|   \\ \\_\\\\\"\\_\\ \\ \\_____\\ \\ \\_____\\ \\ \\_\\\\\"\\_\\ \\ \\_____\\ \\ \\_____\\ \\ \\_\\     |");
-		System.out
-				.println("|    \\/_/ \\/_/  \\/_____/  \\/_____/  \\/_/ \\/_/  \\/_____/  \\/_____/  \\/_/     |");
-		System.out
-				.println("|                                                                           |");
-		System.out
-				.println("|---------------------------------------------------------------------------|");
+		System.out.println("|---------------------------------------------------------------------------|");
+		System.out.println("|   __   __    ______    ______    __   __    ______    ______    ______    |");
+		System.out.println("|  /\\ \"-.\\ \\  /\\  ___\\  /\\  __ \\  /\\ \"-.\\ \\  /\\  __ \\  /\\  == \\  /\\  ___\\   |");
+		System.out.println("|  \\ \\ \\-.  \\ \\ \\  __\\  \\ \\ \\/\\ \\ \\ \\ \\-.  \\ \\ \\ \\/\\ \\ \\ \\  __<  \\ \\  __\\   |");
+		System.out.println("|   \\ \\_\\\\\"\\_\\ \\ \\_____\\ \\ \\_____\\ \\ \\_\\\\\"\\_\\ \\ \\_____\\ \\ \\_____\\ \\ \\_\\     |");
+		System.out.println("|    \\/_/ \\/_/  \\/_____/  \\/_____/  \\/_/ \\/_/  \\/_____/  \\/_____/  \\/_/     |");
+		System.out.println("|                                                                           |");
+		System.out.println("|---------------------------------------------------------------------------|");
 	}
 
 	@Override
@@ -190,7 +191,7 @@ public class Main extends Thread implements Opcodes {
 
 			System.out.println("--------------------------------------------------");
 
-			for(Transformer transformer : transformers) {
+			for(Transformer transformer : usedTransformers) {
 				String name = transformer.getClass().getName();
 
 				System.out.println("Started transformation with "
@@ -262,11 +263,9 @@ public class Main extends Thread implements Opcodes {
 
 	public byte[] dump(ClassNode node, boolean autoAdd) {
 		if (node.innerClasses != null) {
-			node.innerClasses.stream().filter(in -> in.innerName != null).forEach(in -> {
-				if (in.innerName.indexOf('/') != -1) {
-					in.innerName = in.innerName
-							.substring(in.innerName.lastIndexOf('/') + 1); // Stringer
-				}
+			((List<InnerClassNode>) node.innerClasses).stream().filter(in -> in.innerName != null).forEach(in -> {
+				if (in.innerName.indexOf('/') != -1)
+					in.innerName = in.innerName.substring(in.innerName.lastIndexOf('/') + 1); // Stringer
 			});
 		}
 		ClassWriter writer = new CustomClassWriter(ClassWriter.COMPUTE_FRAMES);

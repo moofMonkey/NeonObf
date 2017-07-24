@@ -3,6 +3,7 @@ package com.neonObf.transformers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.LocalVariableNode;
@@ -28,7 +29,7 @@ public class LocalVariableNameObfuscator extends Transformer {
 		if (mn.localVariables == null)
 			return;
 		for(int i = 0; i < mn.localVariables.size(); i++) {
-			LocalVariableNode lvn = mn.localVariables.get(i);
+			LocalVariableNode lvn = (LocalVariableNode) mn.localVariables.get(i);
 
 			mn.localVariables.set (
 				i,
@@ -50,7 +51,7 @@ public class LocalVariableNameObfuscator extends Transformer {
 		for(int i = 0; i < classes.size(); i++) {
 			ClassNode cn = classes.get(i);
 
-			for(MethodNode mn : cn.methods)
+			for(MethodNode mn : (List<MethodNode>) cn.methods)
 				new LocalVariableNameObfuscator(mn).start();
 
 			classes.set(i, cn);

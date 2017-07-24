@@ -43,18 +43,6 @@ public class Main extends Thread {
 	public SmartNameGen nameGen;
 	public String[] args;
 
-	static {
-		//existTransformers.put("AntiMemoryDump", new AntiMemoryDump());
-		existTransformers.put("BasicTypesEncryption", new BasicTypesEncryption());
-		existTransformers.put("CodeHider", new CodeHider());
-		existTransformers.put("FinalRemover", new FinalRemover());
-		existTransformers.put("GotoFloodObfuscation", new GotoFloodObfuscation());
-		existTransformers.put("LineNumberObfuscation", new LineNumberObfuscation());
-		existTransformers.put("LocalVariableNameObfuscator", new LocalVariableNameObfuscator());
-		existTransformers.put("SourceFileRemover", new SourceFileRemover());
-		existTransformers.put("TryCatch", new TryCatch());
-	}
-
 	public static Main getInstance() {
 		return instance;
 	}
@@ -62,7 +50,7 @@ public class Main extends Thread {
 	private void checkArgs() throws Throwable {
 		if (args.length < 5) {
 			System.out
-					.println("Usage: java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <transformers> <min/norm/max>");
+					.println("Usage: java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <min/norm/max> <transformers>");
 			throw new Throwable();
 		}
 
@@ -110,24 +98,33 @@ public class Main extends Thread {
 
 				break;
 			case 3:
-				for(String s : arg.split(";"))
-					usedTransformers.add(existTransformers.get(s));
-
-				break;
-			case 4:
 				if (arg.equalsIgnoreCase("min"))
 					nameGen = new SmartNameGen("abcdefghijklmnopqrstuvwxyz"
 							+ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "_");
 				else
-					if (arg.equalsIgnoreCase("norm"))
-						nameGen = new SmartNameGen("abcdefghijklmnopqrstuvwxyz"
-								+ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "_.#{}");
-					else
-						if (arg.equalsIgnoreCase("max"))
-							nameGen = new SmartNameGen("\r" + "\t");
-						else
-							throw new Throwable("Arg " + index + " is not valid. Arg is "
-									+ arg);
+				if (arg.equalsIgnoreCase("norm"))
+					nameGen = new SmartNameGen("abcdefghijklmnopqrstuvwxyz"
+							+ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "_.#{}");
+				else
+				if (arg.equalsIgnoreCase("max"))
+					nameGen = new SmartNameGen("\r" + "\t");
+				else
+					throw new Throwable("Arg " + index + " is not valid. Arg is " + arg);
+
+				//existTransformers.put("AntiMemoryDump", new AntiMemoryDump());
+				existTransformers.put("BasicTypesEncryption", new BasicTypesEncryption());
+				existTransformers.put("CodeHider", new CodeHider());
+				existTransformers.put("FinalRemover", new FinalRemover());
+				existTransformers.put("GotoFloodObfuscation", new GotoFloodObfuscation());
+				existTransformers.put("LineNumberObfuscation", new LineNumberObfuscation());
+				existTransformers.put("LocalVariableNameObfuscator", new LocalVariableNameObfuscator());
+				existTransformers.put("SourceFileRemover", new SourceFileRemover());
+				existTransformers.put("TryCatch", new TryCatch());
+
+				break;
+			case 4:
+				for(String s : arg.split(";"))
+					usedTransformers.add(existTransformers.get(s));
 
 				break;
 			default:

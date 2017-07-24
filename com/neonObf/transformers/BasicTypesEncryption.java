@@ -25,7 +25,7 @@ public class BasicTypesEncryption extends Transformer {
 		STRING,
 		OTHER;
 		
-		public static Value getLDCtypeof(Object o) {
+		public static Value typeof(Object o) {
 			if(o instanceof Integer)
 				return INT;
 			if(o instanceof Long)
@@ -67,7 +67,7 @@ public class BasicTypesEncryption extends Transformer {
 				LdcInsnNode lin = (LdcInsnNode) next;
 				Object o = lin.cst;
 				
-				switch(Value.getLDCtypeof(o)) {
+				switch(Value.typeof(o)) {
 					case STRING:
 						if(((String) o).equals(""))
 							break;

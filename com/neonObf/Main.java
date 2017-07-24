@@ -24,7 +24,7 @@ import com.neonObf.transformers.*;
 
 public class Main extends Thread {
 	private static Main instance;
-	public static final HashMap<String, Transformer> existTransformers = new HashMap<>();
+	public static final HashMap<String, Transformer> transformers = new HashMap<>();
 
 	public File inF, outF;
 	public ArrayList<ClassNode> classes = new ArrayList<ClassNode>();
@@ -38,7 +38,7 @@ public class Main extends Thread {
 	 */
 	public HashMap<ClassNode, String> hmSCN2 = new HashMap<ClassNode, String>();
 	public ArrayList<File> paths = new ArrayList<File>();
-	public ArrayList<Transformer> usedTransformers = new ArrayList<Transformer>();
+	public String[] usedTransformers;
 	public HashMap<String, Integer> pkgLens = new HashMap<String, Integer>();
 	public SmartNameGen nameGen;
 	public String[] args;
@@ -50,7 +50,7 @@ public class Main extends Thread {
 	private void checkArgs() throws Throwable {
 		if (args.length < 5) {
 			System.out
-					.println("Usage: java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <min/norm/max> <transformers>");
+					.println("Usage: java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <transformers> <min/norm/max>");
 			throw new Throwable();
 		}
 
@@ -98,6 +98,10 @@ public class Main extends Thread {
 
 				break;
 			case 3:
+				usedTransformers = arg.split(";");
+
+				break;
+			case 4:
 				if (arg.equalsIgnoreCase("min"))
 					nameGen = new SmartNameGen("abcdefghijklmnopqrstuvwxyz"
 							+ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "_");
@@ -112,19 +116,14 @@ public class Main extends Thread {
 					throw new Throwable("Arg " + index + " is not valid. Arg is " + arg);
 
 				//existTransformers.put("AntiMemoryDump", new AntiMemoryDump());
-				existTransformers.put("BasicTypesEncryption", new BasicTypesEncryption());
-				existTransformers.put("CodeHider", new CodeHider());
-				existTransformers.put("FinalRemover", new FinalRemover());
-				existTransformers.put("GotoFloodObfuscation", new GotoFloodObfuscation());
-				existTransformers.put("LineNumberObfuscation", new LineNumberObfuscation());
-				existTransformers.put("LocalVariableNameObfuscator", new LocalVariableNameObfuscator());
-				existTransformers.put("SourceFileRemover", new SourceFileRemover());
-				existTransformers.put("TryCatch", new TryCatch());
-
-				break;
-			case 4:
-				for(String s : arg.split(";"))
-					usedTransformers.add(existTransformers.get(s));
+				transformers.put("BasicTypesEncryption", new BasicTypesEncryption());
+				transformers.put("CodeHider", new CodeHider());
+				transformers.put("FinalRemover", new FinalRemover());
+				transformers.put("GotoFloodObfuscation", new GotoFloodObfuscation());
+				transformers.put("LineNumberObfuscation", new LineNumberObfuscation());
+				transformers.put("LocalVariableNameObfuscator", new LocalVariableNameObfuscator());
+				transformers.put("SourceFileRemover", new SourceFileRemover());
+				transformers.put("TryCatch", new TryCatch());
 
 				break;
 			default:
@@ -188,16 +187,12 @@ public class Main extends Thread {
 
 			System.out.println("--------------------------------------------------");
 
-			for(Transformer transformer : usedTransformers) {
-				String name = transformer.getClass().getName();
+			for(String transformerName : usedTransformers) {
+				System.out.println("Started transformation with " + transformerName + " transformer");
 
-				System.out.println("Started transformation with "
-						+ name.substring(name.lastIndexOf('.') + 1) + " transformer");
+				modClasses = transformers.get(transformerName).obfuscate(modClasses);
 
-				modClasses = transformer.obfuscate(modClasses);
-
-				System.out.println("Transformation completed with "
-						+ name.substring(name.lastIndexOf('.') + 1) + " transformer");
+				System.out.println("Transformation completed with " + transformerName + " transformer");
 			}
 
 			System.out.println("--------------------------------------------------");

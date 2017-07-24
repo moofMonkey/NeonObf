@@ -13,7 +13,6 @@ import com.neonObf.Main;
 import com.neonObf.SmartNameGen;
 
 public class LocalVariableNameObfuscator extends Transformer {
-	public SmartNameGen nameGen = Main.getInstance().nameGen;
 	HashMap<String, Boolean> hm = new HashMap<String, Boolean>();
 
 	public LocalVariableNameObfuscator(MethodNode _mn) {
@@ -34,7 +33,7 @@ public class LocalVariableNameObfuscator extends Transformer {
 			mn.localVariables.set (
 				i,
 				new LocalVariableNode (
-					nameGen.get(i),
+					Main.getInstance().nameGen.get(i),
 					lvn.desc,
 					null,
 					lvn.start,

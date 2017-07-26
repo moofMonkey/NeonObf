@@ -2,15 +2,16 @@
 NeonObf-uscator is start-up obfuscator
 
 # Base libraries
-P.S.: that's needed libraries that must be there are!
+P.S.: that's needed libraries that must be there are.
 
 https://yadi.sk/d/cdeIXPUM3G5uda
 
-## Obfuscation examples
-Deprecated examples:
+## Usage
+java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <transformers> <min/norm/max>
 
-1. http://rgho.st/78dqKRc7H
-2. http://rgho.st/6nRLHJHVw
+Example: java -jar NeonObf.jar IN.jar OUT.jar libs SourceFileRemover;LineNumberObfuscation;FinalRemover;LocalVariableNameObfuscator;BasicTypesEncryption;GotoFloodObfuscation;CodeHider max
+
+It's highly recommended to use ProGuard with short names obfuscation before NeonObf (ASM are buggy and eats a lot of memory)
 
 ## License
 Apache =_=

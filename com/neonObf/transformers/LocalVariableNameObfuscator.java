@@ -4,6 +4,9 @@ package com.neonObf.transformers;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.LocalVariableNode;
@@ -46,12 +49,16 @@ public class LocalVariableNameObfuscator extends Transformer {
 	}
 
 	@Override
-	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) {
+	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
 		for(int i = 0; i < classes.size(); i++) {
 			ClassNode cn = classes.get(i);
 
+			ExecutorService service = Executors.newCachedThreadPool();
 			for(MethodNode mn : (List<MethodNode>) cn.methods)
-				new LocalVariableNameObfuscator(mn).start();
+				service.execute(new LocalVariableNameObfuscator(mn));
+
+			service.shutdown();
+			service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 
 			classes.set(i, cn);
 		}

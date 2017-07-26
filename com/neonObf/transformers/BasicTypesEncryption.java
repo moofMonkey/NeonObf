@@ -1,6 +1,9 @@
 package com.neonObf.transformers;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
@@ -57,9 +60,8 @@ public class BasicTypesEncryption extends Transformer {
 	@Override
 	public void run() {
 		String decMethName = decryptorsNames.get(parent.name); //FIXME
-		ListIterator<AbstractInsnNode> iterator;
+		ListIterator<AbstractInsnNode> iterator = mn.instructions.iterator();
 		AbstractInsnNode next;
-		iterator = mn.instructions.iterator();
 		while(iterator.hasNext()) {
 			next = iterator.next();
 			
@@ -266,7 +268,9 @@ public class BasicTypesEncryption extends Transformer {
 	@Override
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
 		SmartNameGen nameGen = Main.getInstance().nameGen;
-		
+
+
+		ExecutorService service = Executors.newCachedThreadPool();
 		for (int i = 0; i < classes.size(); i++) {
 			ClassNode cn = classes.get(i);
 			
@@ -282,9 +286,11 @@ public class BasicTypesEncryption extends Transformer {
 			);
 			for (int i2 = 0; i2 < cn.methods.size(); i2++) {
 				MethodNode mn = (MethodNode) cn.methods.get(i2);
-				new BasicTypesEncryption(mn, cn, rand.nextLong()).start();
+				service.execute(new BasicTypesEncryption(mn, cn, rand.nextLong()));
 			}
 		}
+		service.shutdown();
+		service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
 		
 		return classes;
 	}
@@ -308,7 +314,7 @@ public class BasicTypesEncryption extends Transformer {
 		return false;
 	}
 	
-	public void makeDecryptorMethod(ClassNode cn, String name) {
+	public void makeDecryptorMethod(ClassNode cn, String name) { // please implenent your method if you want more security
 		SmartNameGen nameGen = Main.getInstance().nameGen;
 		
 		MethodNode mn = new MethodNode(ACC_PRIVATE + ACC_STATIC + ACC_SYNTHETIC,

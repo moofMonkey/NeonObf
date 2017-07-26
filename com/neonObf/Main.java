@@ -254,12 +254,11 @@ public class Main extends Thread {
 	}
 
 	public byte[] dump(ClassNode node, boolean autoAdd) {
-		if (node.innerClasses != null) {
+		if (node.innerClasses != null)
 			((List<InnerClassNode>) node.innerClasses).stream().filter(in -> in.innerName != null).forEach(in -> {
 				if (in.innerName.indexOf('/') != -1)
 					in.innerName = in.innerName.substring(in.innerName.lastIndexOf('/') + 1); // Stringer
 			});
-		}
 		ClassWriter writer = new CustomClassWriter(ClassWriter.COMPUTE_FRAMES);
 		try {
 			try {
@@ -275,16 +274,13 @@ public class Main extends Thread {
 				} else
 					if (e.getMessage() != null) {
 						if (e.getMessage().contains("JSR/RET")) {
-							System.out
-									.println("ClassNode contained JSR/RET so COMPUTE_MAXS instead");
+							System.out.println("ClassNode contained JSR/RET so COMPUTE_MAXS instead");
 							writer = new CustomClassWriter(ClassWriter.COMPUTE_MAXS);
 							node.accept(writer);
-						} else {
+						} else
 							throw e;
-						}
-					} else {
+					} else
 						throw e;
-					}
 			}
 			byte[] classBytes = writer.toByteArray();
 
@@ -292,14 +288,12 @@ public class Main extends Thread {
 			try {
 				cr.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
 			} catch(Throwable t) {
-				// System.out.println("Error: " + node.name + " failed
-				// verification");
+				// System.out.println("Error: " + node.name + " failed verification");
 				// t.printStackTrace();
 			}
 
 			if (autoAdd)
-				files.add(new MyFile(node.name.replaceAll("\\.", "/")
-						+ ".class", classBytes));
+				files.add(new MyFile(node.name.replaceAll("\\.", "/") + ".class", classBytes));
 
 			return classBytes;
 		} catch(Throwable t) {
@@ -364,7 +358,8 @@ public class Main extends Thread {
 		final long time = 0;
 
 		ze.setTime(time);
-		ze = ze.setCreationTime(FileTime.fromMillis(time))
+		ze = ze
+				.setCreationTime(FileTime.fromMillis(time))
 				.setLastAccessTime(FileTime.fromMillis(time))
 				.setLastModifiedTime(FileTime.fromMillis(time));
 

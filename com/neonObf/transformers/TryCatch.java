@@ -3,6 +3,9 @@ package com.neonObf.transformers;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -66,13 +69,17 @@ public class TryCatch extends Transformer {
 	}
 	
 	@Override
-	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) {
+	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
 		for (int i = 0; i < classes.size(); i++) {
 			ClassNode cn = classes.get(i);
-			
+
+			ExecutorService service = Executors.newCachedThreadPool();
 			for (MethodNode mn : (List<MethodNode>) cn.methods)
-				new TryCatch(mn).start();
-			
+				service.execute(new TryCatch(mn));
+
+			service.shutdown();
+			service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+
 			classes.set(i, cn);
 		}
 		

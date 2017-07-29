@@ -11,7 +11,7 @@ P.S.: you can use "null" (w/o quotes) as </path/to/libs/>
 It's highly recommended to use ProGuard with short names obfuscation before NeonObf
 
 ## License
-Apache =_=
+MIT
 
 ## Communications with author
 Skype: moofMonkey

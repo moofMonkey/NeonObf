@@ -16,6 +16,8 @@ Apache =_=
 ## Communications with author
 Skype: moofMonkey
 
+Discord: moofMonkey#9729
+
 VK: https://new.vk.com/moofmonkey.java
 
 ## Needed APIs

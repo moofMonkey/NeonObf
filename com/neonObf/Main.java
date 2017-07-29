@@ -29,7 +29,7 @@ public class Main extends Thread {
 	public ArrayList<ClassFile> files = new ArrayList<ClassFile>();
 	public HashMap<String, ClassNode> nameToNode = new HashMap<String, ClassNode>();
 	public HashMap<ClassNode, String> nodeToName = new HashMap<ClassNode, String>();
-	public ArrayList<Library> loadedAPI = new ArrayList<>();
+	public ArrayList<Library> loadedAPI = new ArrayList<Library>();
 	public ArrayList<File> paths = new ArrayList<File>();
 	public String[] usedTransformers;
 	public HashMap<String, Integer> pkgLens = new HashMap<String, Integer>();

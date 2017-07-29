@@ -2,7 +2,7 @@
 NeonObf-uscator is start-up obfuscator
 
 ## Usage
-java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <transformers> <min/norm/max>
+java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <_transformers> <min/norm/max>
 
 Example: java -jar NeonObf.jar IN.jar OUT.jar libs SourceFileRemover;LineNumberObfuscation;FinalRemover;LocalVariableNameObfuscator;BasicTypesEncryption;GotoFloodObfuscation;CodeHider max
 
@@ -17,4 +17,9 @@ Skype: moofMonkey
 VK: https://new.vk.com/moofmonkey.java
 
 ## Needed APIs
-ObjectWeb ASM
+ObjectWeb ASM v6.0 (BETA):
+   asm-core
+   asm-analysis
+   asm-commons
+   asm-tree
+   asm-util

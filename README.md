@@ -18,8 +18,13 @@ VK: https://new.vk.com/moofmonkey.java
 
 ## Needed APIs
 ObjectWeb ASM v6.0 (BETA):
+
    asm-core
+   
    asm-analysis
+   
    asm-commons
+   
    asm-tree
+   
    asm-util

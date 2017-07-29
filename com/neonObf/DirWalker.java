@@ -4,6 +4,7 @@ package com.neonObf;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -14,66 +15,40 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
 public class DirWalker {
-	public static ClassNode loadClass(InputStream is, int mode) {
-		try {
-			final ClassReader reader = new ClassReader(is);
-			final ClassNode node = new ClassNode();
-
-			reader.accept(node, mode);
-			for(int i = 0; i < node.methods.size(); ++i) {
-				final MethodNode methodNode2 = (MethodNode) node.methods.get(i);
-				final JSRInlinerAdapter adapter = new JSRInlinerAdapter(methodNode2, methodNode2.access, methodNode2.name, methodNode2.desc, methodNode2.signature, (String[]) methodNode2.exceptions.toArray(new String[0]));
-				methodNode2.accept(adapter);
-				node.methods.set(i, adapter);
-			}
-
-			Main.getInstance().hmSCN.put(node.name, node);
-			Main.getInstance().hmSCN2.put(node, node.name);
-
-			return node;
-		} catch(Throwable t) {
-			t.printStackTrace();
-			return null;
-		}
-	}
-
-	public DirWalker(File file, int mode, boolean addToClassList) throws Throwable {
+	public DirWalker(File file, int mode, boolean isLibrary) throws Throwable {
 		String name = file.getName();
 		String path = file.getAbsolutePath();
 		if (file.isDirectory()) {
 			if (file.listFiles() != null && !path.endsWith(".donot"))
 				for(File f : file.listFiles())
 					if (!(f.getName().charAt(0) == '.' || f.getName().charAt(0) == '$'))
-						new DirWalker(f, mode, addToClassList);
+						new DirWalker(f, mode, isLibrary);
 		} else
 			if (file.isFile() && name.lastIndexOf('.') > -1
 					&& (name.endsWith("jar") || name.endsWith("class"))) {
 				if (name.endsWith("jar"))
-					bruteZipFile(new File(path), mode, addToClassList);
-				if (name.endsWith("class")) {
-					ClassNode cn = loadClass(new FileInputStream(path), mode);
-					if (addToClassList)
-						Main.getInstance().classes.add(cn);
-					System.out.println(cn.name + " " + file.getPath());
-				}
+					loadFile(new File(path), mode, isLibrary);
 			}
 	}
 
-	public void bruteZipFile(File f, int mode, boolean addToClassList) throws Throwable {
+	public void loadFile(File f, int mode, boolean isLibrary) throws Throwable {
 		try {
 			final ZipFile zipIn = new ZipFile(f);
 			final Enumeration<? extends ZipEntry> e = zipIn.entries();
+			ArrayList<String> classList = new ArrayList<>();
 			while (e.hasMoreElements()) {
 				final ZipEntry next = e.nextElement();
 				if (next.getName().endsWith(".class")) {
-					ClassNode cn = loadClass(zipIn.getInputStream(next), mode);
-					if (addToClassList)
-						Main.getInstance().classes.add(cn);
+					if(isLibrary)
+						classList.add(next.getName().replaceAll("(.*)\\.class", "$1"));
+					else
+						Main.getInstance().classes.add(CustomClassWriter.loadClass(zipIn.getInputStream(next), ClassReader.SKIP_FRAMES));
 				} else
 					if (next.isDirectory())
 						continue;
 			}
 			zipIn.close();
+			Main.getInstance().loadedAPI.add(new Library(f, classList, isLibrary));
 		} catch(Throwable t) {
 		}
 	}

@@ -4,7 +4,6 @@ package com.neonObf;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.PrintWriter;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -14,7 +13,6 @@ import java.util.zip.ZipOutputStream;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -28,15 +26,19 @@ public class Main extends Thread {
 
 	public File inF, outF;
 	public ArrayList<ClassNode> classes = new ArrayList<ClassNode>();
-	public ArrayList<MyFile> files = new ArrayList<MyFile>();
+	public ArrayList<ClassFile> files = new ArrayList<ClassFile>();
 	/**
 	 * name => node
 	 */
-	public HashMap<String, ClassNode> hmSCN = new HashMap<String, ClassNode>();
+	public HashMap<String, ClassNode> nameToNode = new HashMap<String, ClassNode>();
 	/**
 	 * node => name
 	 */
-	public HashMap<ClassNode, String> hmSCN2 = new HashMap<ClassNode, String>();
+	public HashMap<ClassNode, String> nodeToName = new HashMap<ClassNode, String>();
+	/**
+	 * node => name
+	 */
+	public ArrayList<Library> loadedAPI = new ArrayList<>();
 	public ArrayList<File> paths = new ArrayList<File>();
 	public String[] usedTransformers;
 	public HashMap<String, Integer> pkgLens = new HashMap<String, Integer>();
@@ -164,17 +166,17 @@ public class Main extends Thread {
 			}
 
 			System.out.println("Loading java APIs...");
-			new DirWalker(new File(System.getProperty("java.home") + File.separatorChar
-					+ "lib"), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG
-							| ClassReader.SKIP_FRAMES, false);
+			new DirWalker(new File(System.getProperty("java.home") + File.separatorChar + "lib"), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES, true);
 			if (!args[2].equalsIgnoreCase("null")) {
 				System.out.println("Loading user APIs...");
-				new DirWalker(new File(args[2]), ClassReader.SKIP_CODE
-						| ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES, false);
+				new DirWalker(new File(args[2]), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES, true);
 			}
-			System.out.println("Loading input file...");
-			new DirWalker(inF, ClassReader.SKIP_FRAMES, true);
 			System.out.println("All APIs loaded!");
+
+			System.out.println("--------------------------------------------------");
+
+			System.out.println("Loading input file...");
+			new DirWalker(inF, ClassReader.SKIP_FRAMES, false);
 
 			System.out.println("--------------------------------------------------");
 
@@ -293,7 +295,7 @@ public class Main extends Thread {
 			}
 
 			if (autoAdd)
-				files.add(new MyFile(node.name.replaceAll("\\.", "/") + ".class", classBytes));
+				files.add(new ClassFile(node.name.replaceAll("\\.", "/") + ".class", classBytes));
 
 			return classBytes;
 		} catch(Throwable t) {
@@ -316,7 +318,7 @@ public class Main extends Thread {
 			ZipEntry ze = in.nextElement();
 			boolean finded = false;
 
-			for(MyFile mc : files)
+			for(ClassFile mc : files)
 				if (mc != null && ze != null && mc.name != null && ze.getName() != null
 						&& mc.name.equals(ze.getName())) {
 					finded = true;
@@ -338,7 +340,7 @@ public class Main extends Thread {
 		}
 		zf.close();
 		/* End of combination of jar's */
-		for(MyFile mc : files)
+		for(ClassFile mc : files)
 			try {
 				data = mc.bytecode;
 				ZipEntry ze = modifyEntry(new ZipEntry(mc.name));

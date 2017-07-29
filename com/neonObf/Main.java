@@ -281,8 +281,7 @@ public class Main extends Thread {
 			try {
 				cr.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
 			} catch(Throwable t) {
-				// System.out.println("Error: " + node.name + " failed verification");
-				// t.printStackTrace();
+				System.out.println("Error: " + node.name + " failed verification. Exception: " + t.getMessage());
 			}
 
 			if (autoAdd)
@@ -290,8 +289,7 @@ public class Main extends Thread {
 
 			return classBytes;
 		} catch(Throwable t) {
-			System.out.println("Error while writing " + node.name);
-			t.printStackTrace(System.out);
+			System.out.println("Error while writing " + node.name + ". This class will be original. Exception: " + t.getMessage());
 		}
 		return null;
 	}

@@ -27,17 +27,8 @@ public class Main extends Thread {
 	public File inF, outF;
 	public ArrayList<ClassNode> classes = new ArrayList<ClassNode>();
 	public ArrayList<ClassFile> files = new ArrayList<ClassFile>();
-	/**
-	 * name => node
-	 */
 	public HashMap<String, ClassNode> nameToNode = new HashMap<String, ClassNode>();
-	/**
-	 * node => name
-	 */
 	public HashMap<ClassNode, String> nodeToName = new HashMap<ClassNode, String>();
-	/**
-	 * node => name
-	 */
 	public ArrayList<Library> loadedAPI = new ArrayList<>();
 	public ArrayList<File> paths = new ArrayList<File>();
 	public String[] usedTransformers;

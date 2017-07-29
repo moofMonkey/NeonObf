@@ -6,7 +6,7 @@ java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/>
 
 Example: java -jar NeonObf.jar IN.jar OUT.jar libs SourceFileRemover;LineNumberObfuscation;FinalRemover;LocalVariableNameObfuscator;BasicTypesEncryption;GotoFloodObfuscation;CodeHider max
 
-It's highly recommended to use ProGuard with short names obfuscation before NeonObf (ASM are buggy and eats a lot of memory)
+It's highly recommended to use ProGuard with short names obfuscation before NeonObf
 
 ## License
 Apache =_=

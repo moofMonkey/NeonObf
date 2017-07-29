@@ -1,11 +1,6 @@
 # NeonObf
 NeonObf-uscator is start-up obfuscator
 
-# Base libraries
-P.S.: that's needed libraries that must be there are.
-
-https://yadi.sk/d/cdeIXPUM3G5uda
-
 ## Usage
 java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <transformers> <min/norm/max>
 

@@ -244,7 +244,7 @@ public class BasicTypesEncryption extends Transformer {
 	
 	public static String decrypt(String str, long rnd) {
 		StackTraceElement ste = Thread.currentThread().getStackTrace()[2];
-		rnd ^= ste.getLineNumber() + ste.getFileName().hashCode();
+		rnd ^= ste.getLineNumber() + (ste.getFileName() != null ? ste.getFileName() : "").hashCode();
 		char[] newC = new char[str.length()];
 		int i = -1;
 		
@@ -255,7 +255,7 @@ public class BasicTypesEncryption extends Transformer {
 	}
 	
 	public static String encrypt(String str, long rnd, String fileName, int line) {
-		rnd ^= line + fileName.hashCode();
+		rnd ^= line + (fileName != null ? fileName : "").hashCode();
 		char[] newC = new char[str.length()];
 		int i = -1;
 		
@@ -319,39 +319,63 @@ public class BasicTypesEncryption extends Transformer {
 		
 		MethodNode mn = new MethodNode(ACC_PRIVATE + ACC_STATIC + ACC_SYNTHETIC,
 				name, "(Ljava/lang/String;J)Ljava/lang/String;", null, null);
-		
+
+		Label
+				l0 = new Label(),
+				l1 = new Label(),
+				l2 = new Label(),
+				l3 = new Label(),
+				l4 = new Label(),
+				l5 = new Label(),
+				l6 = new Label(),
+				l7 = new Label(),
+				l8 = new Label(),
+				l9 = new Label(),
+				l10 = new Label(),
+				l11 = new Label(),
+				l12 = new Label();
+
 		mn.visitCode();
-		Label l0 = new Label();
+
 		mn.visitLabel(l0);
 		mn.visitMethodInsn(INVOKESTATIC, "java/lang/Thread", "currentThread", "()Ljava/lang/Thread;", false);
 		mn.visitMethodInsn(INVOKEVIRTUAL, "java/lang/Thread", "getStackTrace", "()[Ljava/lang/StackTraceElement;", false);
 		mn.visitInsn(ICONST_2);
 		mn.visitInsn(AALOAD);
 		mn.visitVarInsn(ASTORE, 3);
-		Label l1 = new Label();
+
 		mn.visitLabel(l1);
 		mn.visitVarInsn(LLOAD, 1);
 		mn.visitVarInsn(ALOAD, 3);
 		mn.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StackTraceElement", "getLineNumber", "()I", false);
 		mn.visitVarInsn(ALOAD, 3);
 		mn.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StackTraceElement", "getFileName", "()Ljava/lang/String;", false);
+		mn.visitJumpInsn(IFNULL, l2);
+		mn.visitVarInsn(ALOAD, 3);
+		mn.visitMethodInsn(INVOKEVIRTUAL, "java/lang/StackTraceElement", "getFileName", "()Ljava/lang/String;", false);
+		mn.visitJumpInsn(GOTO, l3);
+
+		mn.visitLabel(l2);
+		mn.visitLdcInsn("");
+
+		mn.visitLabel(l3);
 		mn.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "hashCode", "()I", false);
 		mn.visitInsn(IADD);
 		mn.visitInsn(I2L);
 		mn.visitInsn(LXOR);
 		mn.visitVarInsn(LSTORE, 1);
-		Label l2 = new Label();
-		mn.visitLabel(l2);
+
+		mn.visitLabel(l4);
 		mn.visitVarInsn(ALOAD, 0);
 		mn.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "length", "()I", false);
 		mn.visitIntInsn(NEWARRAY, T_CHAR);
 		mn.visitVarInsn(ASTORE, 4);
-		Label l3 = new Label();
-		mn.visitLabel(l3);
+
+		mn.visitLabel(l5);
 		mn.visitInsn(ICONST_M1);
 		mn.visitVarInsn(ISTORE, 5);
-		Label l4 = new Label();
-		mn.visitLabel(l4);
+
+		mn.visitLabel(l6);
 		mn.visitVarInsn(ALOAD, 0);
 		mn.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "toCharArray", "()[C", false);
 		mn.visitInsn(DUP);
@@ -360,17 +384,17 @@ public class BasicTypesEncryption extends Transformer {
 		mn.visitVarInsn(ISTORE, 8);
 		mn.visitInsn(ICONST_0);
 		mn.visitVarInsn(ISTORE, 7);
-		Label l5 = new Label();
-		mn.visitJumpInsn(GOTO, l5);
-		Label l6 = new Label();
-		mn.visitLabel(l6);
+
+		mn.visitJumpInsn(GOTO, l7);
+
+		mn.visitLabel(l8);
 		mn.visitFrame(Opcodes.F_FULL, 9, new Object[] {"java/lang/String", Opcodes.LONG, "java/lang/StackTraceElement", "[C", Opcodes.INTEGER, Opcodes.TOP, Opcodes.INTEGER, Opcodes.INTEGER, "[C"}, 0, new Object[] {});
 		mn.visitVarInsn(ALOAD, 9);
 		mn.visitVarInsn(ILOAD, 7);
 		mn.visitInsn(CALOAD);
 		mn.visitVarInsn(ISTORE, 6);
-		Label l7 = new Label();
-		mn.visitLabel(l7);
+
+		mn.visitLabel(l9);
 		mn.visitVarInsn(ALOAD, 4);
 		mn.visitIincInsn(5, 1);
 		mn.visitVarInsn(ILOAD, 5);
@@ -383,29 +407,29 @@ public class BasicTypesEncryption extends Transformer {
 		mn.visitInsn(L2I);
 		mn.visitInsn(I2C);
 		mn.visitInsn(CASTORE);
-		Label l8 = new Label();
-		mn.visitLabel(l8);
+
+		mn.visitLabel(l10);
 		mn.visitIincInsn(7, 1);
-		mn.visitLabel(l5);
+		mn.visitLabel(l7);
 		mn.visitFrame(Opcodes.F_SAME, 0, null, 0, null);
 		mn.visitVarInsn(ILOAD, 7);
 		mn.visitVarInsn(ILOAD, 8);
-		mn.visitJumpInsn(IF_ICMPLT, l6);
-		Label l9 = new Label();
-		mn.visitLabel(l9);
+		mn.visitJumpInsn(IF_ICMPLT, l8);
+
+		mn.visitLabel(l11);
 		mn.visitTypeInsn(NEW, "java/lang/String");
 		mn.visitInsn(DUP);
 		mn.visitVarInsn(ALOAD, 4);
 		mn.visitMethodInsn(INVOKESPECIAL, "java/lang/String", "<init>", "([C)V", false);
 		mn.visitInsn(ARETURN);
-		Label l10 = new Label();
-		mn.visitLabel(l10);
-		mn.visitLocalVariable(nameGen.get(3), "Ljava/lang/String;", null, l0, l10, 0);
-		mn.visitLocalVariable(nameGen.get(4), "J", null, l0, l10, 1);
-		mn.visitLocalVariable(nameGen.get(5), "Ljava/lang/StackTraceElement;", null, l1, l10, 3);
-		mn.visitLocalVariable(nameGen.get(6), "[C", null, l3, l10, 4);
-		mn.visitLocalVariable(nameGen.get(7), "I", null, l4, l10, 5);
-		mn.visitLocalVariable(nameGen.get(8), "C", null, l7, l8, 6);
+
+		mn.visitLabel(l12);
+		mn.visitLocalVariable(nameGen.get(3), "Ljava/lang/String;", null, l0, l12, 0);
+		mn.visitLocalVariable(nameGen.get(4), "J", null, l0, l12, 1);
+		mn.visitLocalVariable(nameGen.get(5), "Ljava/lang/StackTraceElement;", null, l1, l12, 3);
+		mn.visitLocalVariable(nameGen.get(6), "[C", null, l5, l12, 4);
+		mn.visitLocalVariable(nameGen.get(7), "I", null, l6, l12, 5);
+		mn.visitLocalVariable(nameGen.get(8), "C", null, l9, l10, 6);
 		mn.visitMaxs(6, 10);
 		mn.visitEnd();
 		

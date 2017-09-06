@@ -25,17 +25,15 @@ public class CustomClassWriter extends ClassWriter {
 		while (!toLoad.isEmpty()) {
 			ClassNode poll = toLoad.poll();
 
-			for(ClassNode toProcess : loadHierachy(poll)) {
-				if (processed.add(toProcess.name)) {
+			for(ClassNode toProcess : loadHierachy(poll))
+				if (processed.add(toProcess.name))
 					toLoad.add(toProcess);
-				}
-			}
 		}
 	}
 
 	public static List<ClassNode> loadHierachy(ClassNode specificNode) {
 		try {
-			if (specificNode.name.equals("java/lang/Object")) {
+			if ("java/lang/Object".equals(specificNode.name)) {
 				return Collections.emptyList();
 			}
 			if ((specificNode.access & Opcodes.ACC_INTERFACE) != 0) {
@@ -58,8 +56,7 @@ public class CustomClassWriter extends ClassWriter {
 			for(String interfaceReference : (List<String>) specificNode.interfaces) {
 				ClassNode interfaceNode = assureLoaded(interfaceReference);
 				if (interfaceNode == null) {
-					throw new IllegalArgumentException("Could not load "
-							+ interfaceReference);
+					throw new IllegalArgumentException("Could not load " + interfaceReference);
 				}
 				ClassTree interfaceTree = getClassTree(interfaceReference);
 				interfaceTree.subClasses.add(specificNode.name);
@@ -80,57 +77,17 @@ public class CustomClassWriter extends ClassWriter {
 	public static ClassNode assureLoaded(String ref) {
 		ClassNode clazz = Main.getInstance().nameToNode.get(ref);
 		if (clazz == null) {
-			for(Library lib : Main.getInstance().loadedAPI)
-				if(lib.classNames.contains(ref)) {
-					clazz = loadClass(getClass(lib.file, ref), lib.isLibrary ? ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES : ClassReader.SKIP_FRAMES);
-					if(clazz != null) {
-						if(!lib.isLibrary)
-							Main.getInstance().classes.add(clazz);
-						return clazz;
-					}
+			for(Library lib : Main.getInstance().loadedAPI) {
+				clazz = lib.getClassNode(ref);
+				if(clazz != null) {
+					if(!lib.isLibrary())
+						Main.getInstance().classes.add(clazz);
+					return clazz;
 				}
+			}
 			throw new NoClassInPathException(ref);
 		}
 		return clazz;
-	}
-
-	public static InputStream getClass(File f, String className) {
-		try {
-			final ZipFile zipIn = new ZipFile(f);
-			final Enumeration<? extends ZipEntry> e = zipIn.entries();
-			ArrayList<String> classList = new ArrayList<>();
-			while (e.hasMoreElements()) {
-				final ZipEntry next = e.nextElement();
-				String nextClassName = next.getName().replaceAll("(.*)\\.class", "$1");
-				if (nextClassName.equals(className))
-					return zipIn.getInputStream(next);
-			}
-			zipIn.close();
-		} catch(Throwable t) {  }
-		return null;
-	}
-
-	public static ClassNode loadClass(InputStream is, int mode) {
-		try {
-			final ClassReader reader = new ClassReader(is);
-			final ClassNode node = new ClassNode();
-
-			reader.accept(node, mode);
-			for(int i = 0; i < node.methods.size(); ++i) {
-				final MethodNode methodNode2 = (MethodNode) node.methods.get(i);
-				final JSRInlinerAdapter adapter = new JSRInlinerAdapter(methodNode2, methodNode2.access, methodNode2.name, methodNode2.desc, methodNode2.signature, (String[]) methodNode2.exceptions.toArray(new String[0]));
-				methodNode2.accept(adapter);
-				node.methods.set(i, adapter);
-			}
-
-			Main.getInstance().nameToNode.put(node.name, node);
-			Main.getInstance().nodeToName.put(node, node.name);
-
-			return node;
-		} catch(Throwable t) {
-			t.printStackTrace();
-			return null;
-		}
 	}
 
 	@Override
@@ -161,13 +118,13 @@ public class CustomClassWriter extends ClassWriter {
 	}
 
 	private String getCommonSuperClass1(String type1, String type2) {
-		if (type1.equals("java/lang/Object") || type2.equals("java/lang/Object"))
+		if ("java/lang/Object".equals(type1) || "java/lang/Object".equals(type2))
 			return "java/lang/Object";
 		String a = getCommonSuperClass0(type1, type2);
 		String b = getCommonSuperClass0(type2, type1);
-		if (!a.equals("java/lang/Object"))
+		if (!"java/lang/Object".equals(a))
 			return a;
-		if (!b.equals("java/lang/Object"))
+		if (!"java/lang/Object".equals(b))
 			return b;
 		ClassNode first = assureLoaded(type1);
 		ClassNode second = assureLoaded(type2);
@@ -175,7 +132,7 @@ public class CustomClassWriter extends ClassWriter {
 	}
 
 	private boolean isAssignableFrom(String type1, String type2) {
-		if (type1.equals("java/lang/Object"))
+		if ("java/lang/Object".equals(type1))
 			return true;
 		if (type1.equals(type2))
 			return true;
@@ -206,5 +163,43 @@ public class CustomClassWriter extends ClassWriter {
 			hierachy.put(classNode, tree);
 		}
 		return tree;
+	}
+
+	public static ClassNode loadClass(InputStream is, int mode) {
+		try {
+			final ClassReader reader = new ClassReader(is);
+			final ClassNode node = new ClassNode();
+
+			reader.accept(node, mode);
+			for(int i = 0; i < node.methods.size(); ++i) {
+				final MethodNode methodNode2 = (MethodNode) node.methods.get(i);
+				final JSRInlinerAdapter adapter = new JSRInlinerAdapter(methodNode2, methodNode2.access, methodNode2.name, methodNode2.desc, methodNode2.signature, (String[]) methodNode2.exceptions.toArray(new String[0]));
+				methodNode2.accept(adapter);
+				node.methods.set(i, adapter);
+			}
+
+			Main.getInstance().nameToNode.put(node.name, node);
+			Main.getInstance().nodeToName.put(node, node.name);
+
+			return node;
+		} catch(Throwable t) {
+			t.printStackTrace();
+			return null;
+		}
+	}
+
+	public static InputStream getClass(File f, String className) {
+		try {
+			final ZipFile zipIn = new ZipFile(f);
+			final Enumeration<? extends ZipEntry> e = zipIn.entries();
+			className += ".class";
+			while (e.hasMoreElements()) {
+				final ZipEntry next = e.nextElement();
+				if (next.getName().equals(className))
+					return zipIn.getInputStream(next);
+			}
+			zipIn.close();
+		} catch(Throwable t) {  }
+		return null;
 	}
 }

@@ -6,17 +6,20 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InnerClassNode;
 import org.objectweb.asm.tree.MethodNode;
-import org.objectweb.asm.util.CheckClassAdapter;
 
 import com.neonObf.transformers.*;
 
@@ -157,24 +160,24 @@ public class Main extends Thread {
 			}
 
 			System.out.println("Loading java APIs...");
-			new DirWalker(new File(System.getProperty("java.home") + File.separatorChar + "lib"), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES, true);
+			new DirWalker(new File(System.getProperty("java.home") + File.separatorChar + "lib"), true);
 			if (!args[2].equalsIgnoreCase("null")) {
 				System.out.println("Loading user APIs...");
-				new DirWalker(new File(args[2]), ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES, true);
+				new DirWalker(new File(args[2]), true);
 			}
 			System.out.println("All APIs loaded!");
 
 			System.out.println("--------------------------------------------------");
 
 			System.out.println("Loading input file...");
-			new DirWalker(inF, ClassReader.SKIP_FRAMES, false);
+			new DirWalker(inF, false);
 
 			System.out.println("--------------------------------------------------");
 
 			System.out.println("Making class tree...");
 			CustomClassWriter.loadHierachy();
 
-			ArrayList<ClassNode> modClasses = classes;
+			ArrayList<ClassNode> modClasses = new ArrayList<>(classes);
 
 			System.out.println("Starting transforming.... " + getDateTag());
 
@@ -277,19 +280,12 @@ public class Main extends Thread {
 			}
 			byte[] classBytes = writer.toByteArray();
 
-			ClassReader cr = new ClassReader(classBytes);
-			try {
-				cr.accept(new CheckClassAdapter(new ClassWriter(0)), 0);
-			} catch(Throwable t) {
-				System.out.println("Error: " + node.name + " failed verification. Exception: " + t.getMessage());
-			}
-
 			if (autoAdd)
 				files.add(new ClassFile(node.name.replaceAll("\\.", "/") + ".class", classBytes));
 
 			return classBytes;
 		} catch(Throwable t) {
-			System.out.println("Error while writing " + node.name + ". This class will be original. Exception: " + t.getMessage());
+			System.out.println("Error occurred while writing " + node.name + ". This class will be original. Exception: " + t.getMessage());
 		}
 		return null;
 	}

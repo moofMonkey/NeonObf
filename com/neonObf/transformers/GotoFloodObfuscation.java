@@ -24,8 +24,7 @@ public class GotoFloodObfuscation extends Transformer {
 	}
 
 	@Override
-	public void run() { // TODO: Randomly throw pieces of code and join it with
-						// gotos
+	public void run() { // TODO: Randomly throw pieces of code and join it with gotos
 		ListIterator<AbstractInsnNode> iterator = mn.instructions.iterator();
 		AbstractInsnNode next;
 		while (iterator.hasNext()) {
@@ -42,18 +41,19 @@ public class GotoFloodObfuscation extends Transformer {
 
 	@Override
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
-		for(int i = 0; i < classes.size(); i++) {
-			ClassNode cn = classes.get(i);
-
+		classes.parallelStream().forEach((cn) -> {
 			ExecutorService service = Executors.newCachedThreadPool();
-			for(MethodNode mn : (List<MethodNode>) cn.methods)
+			((List<MethodNode>) cn.methods).parallelStream().forEach((mn) -> {
 				service.execute(new GotoFloodObfuscation(mn));
+			});
 
 			service.shutdown();
-			service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-
-			classes.set(i, cn);
-		}
+			try {
+				service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+			} catch(Throwable t) {
+				t.printStackTrace();
+			}
+		});
 
 		return classes;
 	}

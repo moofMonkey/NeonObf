@@ -199,7 +199,7 @@ public class BasicTypesEncryption extends Transformer {
 						);
 						
 						break;
-					case OTHER:
+					default:
 						break;
 				}
 				
@@ -242,7 +242,7 @@ public class BasicTypesEncryption extends Transformer {
 		}
 	}
 	
-	public static String decrypt(String str, long rnd) {
+	public static String decrypt(String str, long rnd) { // Method to get bytecode for BasicTypesEncryption#makeDecryptorMethod
 		StackTraceElement ste = Thread.currentThread().getStackTrace()[2];
 		rnd ^= ste.getLineNumber() + (ste.getFileName() != null ? ste.getFileName() : "").hashCode();
 		char[] newC = new char[str.length()];
@@ -270,12 +270,11 @@ public class BasicTypesEncryption extends Transformer {
 		SmartNameGen nameGen = Main.getInstance().nameGen;
 
 
-		ExecutorService service = Executors.newCachedThreadPool();
-		for (int i = 0; i < classes.size(); i++) {
-			ClassNode cn = classes.get(i);
-			
+		classes.parallelStream().forEach((cn) -> {
+			ExecutorService service = Executors.newCachedThreadPool();
+
 			if(!hasInsnsToObf(cn))
-				continue;
+				return;
 
 			makeDecryptorMethod (
 				cn,
@@ -284,14 +283,18 @@ public class BasicTypesEncryption extends Transformer {
 					cn.name
 				)
 			);
-			for (int i2 = 0; i2 < cn.methods.size(); i2++) {
-				MethodNode mn = (MethodNode) cn.methods.get(i2);
+			((List<MethodNode>)cn.methods).parallelStream().forEach((mn) -> {
 				service.execute(new BasicTypesEncryption(mn, cn, rand.nextLong()));
+			});
+
+			service.shutdown();
+			try {
+				service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+			} catch(Throwable t) {
+				t.printStackTrace();
 			}
-		}
-		service.shutdown();
-		service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-		
+		});
+
 		return classes;
 	}
 	
@@ -301,7 +304,7 @@ public class BasicTypesEncryption extends Transformer {
 			while(iterator.hasNext()) {
 				AbstractInsnNode next = iterator.next();
 				
-				if(
+				if (
 					(next.getOpcode() >= LDC && next.getOpcode() <= LDC+2) ||
 					next.getOpcode() == BIPUSH ||
 					next.getOpcode() == SIPUSH

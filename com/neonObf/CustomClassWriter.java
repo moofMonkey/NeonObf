@@ -45,9 +45,8 @@ public class CustomClassWriter extends ClassWriter {
 			ClassTree thisTree = getClassTree(specificNode.name);
 			ClassNode superClass = null;
 			superClass = assureLoaded(specificNode.superName);
-			if (superClass == null) {
+			if (superClass == null)
 				throw new IllegalArgumentException("Could not load " + specificNode.name);
-			}
 			ClassTree superTree = getClassTree(superClass.name);
 			superTree.subClasses.add(specificNode.name);
 			thisTree.parentClasses.add(superClass.name);
@@ -55,9 +54,8 @@ public class CustomClassWriter extends ClassWriter {
 
 			for(String interfaceReference : (List<String>) specificNode.interfaces) {
 				ClassNode interfaceNode = assureLoaded(interfaceReference);
-				if (interfaceNode == null) {
+				if (interfaceNode == null)
 					throw new IllegalArgumentException("Could not load " + interfaceReference);
-				}
 				ClassTree interfaceTree = getClassTree(interfaceReference);
 				interfaceTree.subClasses.add(specificNode.name);
 				thisTree.parentClasses.add(interfaceReference);

@@ -2,17 +2,14 @@ package com.neonObf;
 
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
+import java.util.Collections;
 import java.util.zip.ZipFile;
 
 import org.objectweb.asm.ClassReader;
 
 public class DirWalker {
 	public DirWalker(File file, boolean isLibrary) throws Throwable {
-		Main inst = Main.getInstance();
 		String name = file.getName();
 		String path = file.getAbsolutePath();
 		if (file.isDirectory()) {
@@ -25,7 +22,8 @@ public class DirWalker {
 				if (name.endsWith("jar"))
 					loadZIP(new File(path), isLibrary);
 				if (name.endsWith("class"))
-					loadClass(new File(path), isLibrary);
+					if(!name.equals("module-info.class"))
+						loadClass(new File(path), isLibrary);
 			}
 	}
 
@@ -42,19 +40,18 @@ public class DirWalker {
 	public void loadZIP(File f, boolean isLibrary) throws Throwable {
 		Main inst = Main.getInstance();
 		final ZipFile zipIn = new ZipFile(f);
-		final Enumeration<? extends ZipEntry> e = zipIn.entries();
 		ArrayList<String> classList = new ArrayList<>();
-		while (e.hasMoreElements()) {
-			final ZipEntry next = e.nextElement();
-			if (next.getName().endsWith(".class")) {
-				if(isLibrary)
-					classList.add(next.getName().replaceAll("(.*)\\.class", "$1"));
-				else
-					inst.classes.add(CustomClassWriter.loadClass(zipIn.getInputStream(next), ClassReader.SKIP_FRAMES));
-			} else
-				if (next.isDirectory())
-					continue;
-		}
+		Collections.list(zipIn.entries()).forEach((next) -> {
+			try {
+				if (next.getName().endsWith(".class") && !next.getName().equals("module-info.class"))
+					if (isLibrary)
+						classList.add(next.getName().replaceAll("(.*)\\.class", "$1"));
+					else
+						inst.classes.add(CustomClassWriter.loadClass(zipIn.getInputStream(next), ClassReader.SKIP_FRAMES));
+			} catch(Throwable t) {
+				t.printStackTrace();
+			}
+		});
 		zipIn.close();
 		inst.loadedAPI.add(new ZIPLibrary(f, classList, isLibrary));
 	}

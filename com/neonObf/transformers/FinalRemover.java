@@ -2,6 +2,7 @@ package com.neonObf.transformers;
 
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
@@ -13,20 +14,12 @@ public class FinalRemover extends Transformer {
 
 	@Override
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) {
-		for(int i = 0; i < classes.size(); i++) {
-			ClassNode cn = classes.get(i);
-
-			for(int i2 = 0; i2 < cn.fields.size(); i2++) {
-				FieldNode fn = (FieldNode) cn.fields.get(i2);
-
+		classes.parallelStream().forEach((cn) -> {
+			((List<FieldNode>) cn.fields).parallelStream().forEach((fn) -> {
 				if ((fn.access | ACC_FINAL) != 0)
 					fn.access &= ~ACC_FINAL;
-
-				cn.fields.set(i2, fn);
-			}
-
-			classes.set(i, cn);
-		}
+			});
+		});
 
 		return classes;
 	}

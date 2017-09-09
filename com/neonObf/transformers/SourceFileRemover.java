@@ -2,6 +2,9 @@ package com.neonObf.transformers;
 
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.objectweb.asm.tree.ClassNode;
 
@@ -20,18 +23,20 @@ public class SourceFileRemover extends Transformer {
 	}
 
 	@Override
-	public void run() {
-		parent.sourceFile = nameGen.get(rand.nextInt(100));
-	}
+	public void run() { parent.sourceFile = nameGen.get(rand.nextInt(100)); }
 
 	@Override
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) {
-		for(int i = 0; i < classes.size(); i++) {
-			ClassNode cn = classes.get(i);
+		ExecutorService service = Executors.newCachedThreadPool();
+		classes.parallelStream().forEach((cn) -> {
+			service.execute(new SourceFileRemover(cn));
+		});
 
-			new SourceFileRemover(cn).start();
-
-			classes.set(i, cn);
+		service.shutdown();
+		try {
+			service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} catch(Throwable t) {
+			t.printStackTrace();
 		}
 
 		return classes;

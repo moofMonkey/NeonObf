@@ -15,19 +15,23 @@ import org.objectweb.asm.tree.MethodNode;
 
 /**
  * BETA
- + At moment (22.02.2017) this is abadoned module. I don't have enough time
+ + At moment (22.02.2017) this is abandoned module. I don't have enough time
  *
  * @author moofMonkey
  */
+@Deprecated
 public class AntiMemoryDump extends Transformer {
+	@Deprecated
 	public AntiMemoryDump(MethodNode _mn) {
 		super(_mn, null);
 	}
 
+	@Deprecated
 	public AntiMemoryDump() {
 		super(null, null);
 	}
 
+	@Deprecated
 	@Override
 	public void run() {
 		ListIterator<AbstractInsnNode> iterator;
@@ -52,6 +56,7 @@ public class AntiMemoryDump extends Transformer {
 		}
 	}
 
+	@Deprecated
 	@Override
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
 		for(int i = 0; i < classes.size(); i++) {

@@ -24,8 +24,4 @@ public class Transformer extends Thread implements Opcodes {
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
 		return classes;
 	}
-
-	public static String getDataTag() {
-		return Main.getDateTag();
-	}
 }

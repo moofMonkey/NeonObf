@@ -16,6 +16,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.cli.*;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InnerClassNode;
@@ -32,102 +33,113 @@ public class Main extends Thread {
 	public ArrayList<ClassFile> files = new ArrayList<ClassFile>();
 	public HashMap<String, ClassNode> nameToNode = new HashMap<String, ClassNode>();
 	public HashMap<ClassNode, String> nodeToName = new HashMap<ClassNode, String>();
+	public String[] libraries;
 	public ArrayList<Library> loadedAPI = new ArrayList<Library>();
-	public ArrayList<File> paths = new ArrayList<File>();
 	public String[] usedTransformers;
 	public HashMap<String, Integer> pkgLens = new HashMap<String, Integer>();
 	public SmartNameGen nameGen;
 	public String[] args;
+	public CommandLine cmd;
 
 	public static Main getInstance() {
 		return instance;
 	}
 
-	private void checkArgs() throws Throwable {
-		if (args.length < 5) {
-			System.out
-					.println("Usage: java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <transformers> <min/norm/max>");
-			throw new Throwable();
-		}
-
-		for(int i = 0; i < args.length; i++)
-			if (parseArg(args[i], i, args)) {
-				checkArgs();
-				break;
-			}
-	}
-
 	/***
 	 * Parses argument
-	 * 
-	 * @param arg
-	 *            Argument from massive
-	 * @param index
-	 *            Index of argument in massive
-	 * @param args
-	 *            All arguments
-	 * @return Needed in restart argument checking?
+	 *
 	 * @throws Throwable
 	 */
-	public boolean parseArg(String arg, int index, String[] args) throws Throwable {
-		File f;
-		switch (index) {
-			case 0:
-				if (!(f = new File(arg)).exists())
-					throw new Throwable("Jar to obfuscate not found :L");
-				inF = f;
+	public void parseArgs() throws Throwable {
+		Options options = new Options();
 
-				break;
-			case 1:
-				if ((f = new File(arg)).exists()) {
-					String postfix = "." + new Random().nextInt(100);
-					args[1] += postfix;
-					System.out.println("Out file already exists. Using " + postfix);
-					return true;
-				}
-				outF = f;
+		Option inputArg = new Option("i", "input", true, "Input .jar/.class file/folder path");
+		inputArg.setRequired(true);
+		inputArg.setArgName("path");
+		options.addOption(inputArg);
 
-				break;
-			case 2:
-				if (!(f = new File(arg)).exists() && !arg.equalsIgnoreCase("null"))
-					throw new Throwable(".JAR/.class/folder with libraries must exist! (it can be empty folder or \'null\')");
+		Option outputArg = new Option("o", "output", true, "Output .jar path");
+		outputArg.setRequired(true);
+		outputArg.setArgName("path");
+		options.addOption(outputArg);
 
-				break;
-			case 3:
-				usedTransformers = arg.split(";");
+		Option librariesArg = new Option("l", "libraries", true, "Libraries path (separated by semicolons/multiple arguments)");
+		librariesArg.setRequired(false);
+		librariesArg.setArgName("path");
+		options.addOption(librariesArg);
 
-				break;
-			case 4:
-				if (arg.equalsIgnoreCase("min"))
-					nameGen = new SmartNameGen("abcdefghijklmnopqrstuvwxyz"
-							+ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "_");
-				else
-				if (arg.equalsIgnoreCase("norm"))
-					nameGen = new SmartNameGen("abcdefghijklmnopqrstuvwxyz"
-							+ "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "_.#{}");
-				else
-				if (arg.equalsIgnoreCase("max"))
-					nameGen = new SmartNameGen("\r" + "\t");
-				else
-					throw new Throwable("Arg " + index + " is not valid. Arg is " + arg);
+		Option transformersArg = new Option("t", "transformers", true, "Transformers (separated by semicolons/multiple arguments)");
+		transformersArg.setRequired(true);
+		transformersArg.setArgName("transformers");
+		options.addOption(transformersArg);
 
-				//existTransformers.put("AntiMemoryDump", new AntiMemoryDump());
-				transformers.put("BasicTypesEncryption", new BasicTypesEncryption());
-				transformers.put("CodeHider", new CodeHider());
-				transformers.put("FinalRemover", new FinalRemover());
-				transformers.put("GotoFloodObfuscation", new GotoFloodObfuscation());
-				transformers.put("LineNumberObfuscation", new LineNumberObfuscation());
-				transformers.put("LocalVariableNameObfuscator", new LocalVariableNameObfuscator());
-				transformers.put("SourceFileRemover", new SourceFileRemover());
-				transformers.put("TryCatch", new TryCatch());
+		Option dictionaryArg = new Option("d", "dictionary", true, "Dictionary type");
+		dictionaryArg.setRequired(true);
+		dictionaryArg.setArgName("1/2/3");
+		options.addOption(dictionaryArg);
 
-				break;
-			default:
-				System.out.println("Arg " + index + " is excess.");
-				break;
+		CommandLineParser parser = new DefaultParser();
+		HelpFormatter formatter = new HelpFormatter();
+
+		try {
+			cmd = parser.parse(options, args);
+		} catch (ParseException e) {
+			System.out.println(e.getMessage());
+			formatter.printHelp("java -jar NeonObf.jar", options, true);
+			System.out.println("Example: java -jar NeonObf.jar --input IN.jar --output OUT.jar --transformers SourceFileRemover;LineNumberObfuscation;FinalRemover;LocalVariableNameObfuscator;BasicTypesEncryption;GotoFloodObfuscation;CodeHider --dictionary 3");
+
+			System.exit(1);
+			return;
 		}
 
-		return false;
+		if (!(inF = new File(cmd.getOptionValue("input"))).exists())
+			throw new Throwable("Error: Input file does not exist.");
+
+		if ((outF = new File(cmd.getOptionValue("output"))).exists())
+			throw new Throwable("Error: Output file already exists.");
+
+		ArrayList<String> librariesList = new ArrayList<>();
+		if(cmd.hasOption("libraries"))
+			for (String libraryName1 : cmd.getOptionValues("libraries"))
+				for (String libraryName2 : libraryName1.split(";"))
+					librariesList.add(libraryName2);
+		libraries = librariesList.toArray(new String[librariesList.size()]);
+
+		ArrayList<String> usedTransformersList = new ArrayList<>();
+		for(String transformerName1 : cmd.getOptionValues("transformers"))
+			for(String transformerName2 : transformerName1.split(";"))
+				usedTransformersList.add(transformerName2);
+		usedTransformers = usedTransformersList.toArray(new String[usedTransformersList.size()]);
+
+		int dictiounary;
+		try {
+			dictiounary = Integer.parseInt(cmd.getOptionValue("dictionary"));
+		} catch(NumberFormatException t) {
+			throw new Throwable("Dictionary must be a number (1-3)");
+		}
+		switch(dictiounary) {
+			case 1:
+				nameGen = new SmartNameGen("abcdefghijklmnopqrstuvwxyz" + "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "_");
+				break;
+			case 2:
+				nameGen = new SmartNameGen("abcdefghijklmnopqrstuvwxyz" + "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "_.#{}");
+				break;
+			case 3:
+				nameGen = new SmartNameGen("\r" + "\t");
+				break;
+			default:
+				throw new Throwable("Dictionary number must be in range of 1 to 3");
+		}
+
+		//existTransformers.put("AntiMemoryDump", new AntiMemoryDump());
+		transformers.put("BasicTypesEncryption", new BasicTypesEncryption());
+		transformers.put("CodeHider", new CodeHider());
+		transformers.put("FinalRemover", new FinalRemover());
+		transformers.put("GotoFloodObfuscation", new GotoFloodObfuscation());
+		transformers.put("LineNumberObfuscation", new LineNumberObfuscation());
+		transformers.put("LocalVariableNameObfuscator", new LocalVariableNameObfuscator());
+		transformers.put("SourceFileRemover", new SourceFileRemover());
+		transformers.put("TryCatch", new TryCatch());
 	}
 
 	public static boolean isEmpty(MethodNode mn) {
@@ -150,7 +162,7 @@ public class Main extends Thread {
 		try {
 			printLogo();
 			try {
-				checkArgs();
+				parseArgs();
 			} catch(Throwable t) {
 				String msg = t.getMessage();
 				if (msg != null)
@@ -161,10 +173,9 @@ public class Main extends Thread {
 
 			System.out.println("Loading java APIs...");
 			new DirWalker(new File(System.getProperty("java.home") + File.separatorChar + "lib"), true);
-			if (!args[2].equalsIgnoreCase("null")) {
-				System.out.println("Loading user APIs...");
-				new DirWalker(new File(args[2]), true);
-			}
+			System.out.println("Loading user APIs...");
+			for(String lib : libraries)
+				new DirWalker(new File(lib), true);
 			System.out.println("All APIs loaded!");
 
 			System.out.println("--------------------------------------------------");
@@ -186,8 +197,11 @@ public class Main extends Thread {
 			for(String transformerName : usedTransformers) {
 				System.out.println("Started transformation with " + transformerName + " transformer");
 
-				modClasses = transformers.get(transformerName).obfuscate(modClasses);
-
+				try {
+					modClasses = transformers.get(transformerName).obfuscate(modClasses);
+				} catch(NullPointerException npe) {
+					throw new Throwable("Transformer name \"" + transformerName + "\" aren't defined in Main#transformers.", npe);
+				}
 				System.out.println("Transformation completed with " + transformerName + " transformer");
 			}
 
@@ -202,7 +216,7 @@ public class Main extends Thread {
 			saveAll();
 			System.out.println("All classes saved!");
 		} catch(Throwable t) {
-			t.printStackTrace();
+			System.out.println(t.getMessage());
 		}
 	}
 
@@ -251,7 +265,7 @@ public class Main extends Thread {
 
 	public byte[] dump(ClassNode node, boolean autoAdd) {
 		if (node.innerClasses != null)
-			((List<InnerClassNode>) node.innerClasses).stream().filter(in -> in.innerName != null).forEach(in -> {
+			((List<InnerClassNode>) node.innerClasses).parallelStream().filter(in -> in.innerName != null).forEach(in -> {
 				if (in.innerName.indexOf('/') != -1)
 					in.innerName = in.innerName.substring(in.innerName.lastIndexOf('/') + 1); // Stringer
 			});

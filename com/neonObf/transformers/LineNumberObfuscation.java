@@ -2,6 +2,7 @@ package com.neonObf.transformers;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.ExecutorService;
@@ -25,9 +26,9 @@ public class LineNumberObfuscation extends Transformer {
 	@Override
 	public void run() {
 		try {
-			ListIterator<AbstractInsnNode> iterator;
+			ListIterator<AbstractInsnNode> iterator = mn.instructions.iterator();
 			AbstractInsnNode next;
-			iterator = mn.instructions.iterator(0);
+			//TODO: implement stream
 			while (iterator.hasNext()) {
 				next = iterator.next();
 
@@ -45,18 +46,19 @@ public class LineNumberObfuscation extends Transformer {
 
 	@Override
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
-		for(int i = 0; i < classes.size(); i++) {
-			ClassNode cn = classes.get(i);
-
+		classes.parallelStream().forEach((cn) -> {
 			ExecutorService service = Executors.newCachedThreadPool();
-			for(MethodNode mn : (List<MethodNode>) cn.methods)
+			((List<MethodNode>) cn.methods).parallelStream().forEach((mn) -> {
 				service.execute(new LineNumberObfuscation(mn));
+			});
 
 			service.shutdown();
-			service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-
-			classes.set(i, cn);
-		}
+			try {
+				service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+			} catch(Throwable t) {
+				t.printStackTrace();
+			}
+		});
 
 		return classes;
 	}

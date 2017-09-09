@@ -2,13 +2,18 @@
 NeonObf-uscator is start-up obfuscator
 
 ## Usage
-java -jar NeonObf.jar <jar_to_obfuscate> <jar_to_obfuscate_out> </path/to/libs/> <_transformers> <min/norm/max>
+**WARNING**: currently doesn't working with Java 9.
 
-Example: java -jar NeonObf.jar IN.jar OUT.jar libs SourceFileRemover;LineNumberObfuscation;FinalRemover;LocalVariableNameObfuscator;BasicTypesEncryption;GotoFloodObfuscation;CodeHider max
+Usage: java -jar NeonObf.jar -d <1/2/3> -i <path> [-l <path>] -o <path> -t <transformers>
+ -d,--dictionary <1/2/3>            Dictionary type
+ -i,--input <path>                  Input .jar/.class file/folder path
+ -l,--libraries <path>              Libraries path (separated by semicolons/multiple arguments)
+ -o,--output <path>                 Output .jar path
+ -t,--transformers <transformers>   Transformers (separated by semicolons/multiple arguments)
 
-P.S.: you can use "null" (w/o quotes) as </path/to/libs/>
+Example: java -jar NeonObf.jar --input IN.jar --output OUT.jar --transformers SourceFileRemover;LineNumberObfuscation;FinalRemover;LocalVariableNameObfuscator;BasicTypesEncryption;GotoFloodObfuscation;CodeHider --dictionary 3
 
-It's highly recommended to use ProGuard with short names obfuscation before NeonObf
+It's highly recommended to use ProGuard with short names obfuscation before NeonObf as it's reducing memory usage of NeonObf
 
 ## License
 MIT
@@ -27,3 +32,4 @@ ObjectWeb ASM v6.0 (BETA):
  - asm-analysis
  - asm-commons
  - asm-tree
+ - commons-cli

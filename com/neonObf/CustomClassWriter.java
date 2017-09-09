@@ -100,19 +100,19 @@ public class CustomClassWriter extends ClassWriter {
 		if (isAssignableFrom(type1, type2))
 			return type1;
 		else
-			if (isAssignableFrom(type2, type1))
-				return type2;
-			else
-				if (Modifier.isInterface(first.access)
-						|| Modifier.isInterface(second.access))
-					return "java/lang/Object";
-				else {
-					do {
-						type1 = first.superName;
-						first = assureLoaded(type1);
-					} while (!isAssignableFrom(type1, type2));
-					return type1;
-				}
+		if (isAssignableFrom(type2, type1))
+			return type2;
+		else
+		if (Modifier.isInterface(first.access)
+				|| Modifier.isInterface(second.access))
+			return "java/lang/Object";
+		else {
+			do {
+				type1 = first.superName;
+				first = assureLoaded(type1);
+			} while (!isAssignableFrom(type1, type2));
+			return type1;
+		}
 	}
 
 	private String getCommonSuperClass1(String type1, String type2) {

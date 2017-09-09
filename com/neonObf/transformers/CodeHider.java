@@ -46,12 +46,8 @@ public class CodeHider extends Transformer {
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
 		classes.parallelStream().forEach((cn) -> {
 			ExecutorService service = Executors.newCachedThreadPool();
-			((List<MethodNode>) cn.methods).parallelStream().forEach((mn) -> {
-				service.submit(new CodeHider(mn));
-			});
-			((List<FieldNode>) cn.fields).parallelStream().forEach((fn) -> {
-				service.submit(new CodeHider(fn));
-			});
+			((List<MethodNode>) cn.methods).parallelStream().forEach(mn -> service.submit(new CodeHider(mn)));
+			((List<FieldNode>) cn.fields).parallelStream().forEach(fn -> service.submit(new CodeHider(fn)));
 
 			service.shutdown();
 			try {

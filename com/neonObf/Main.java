@@ -29,17 +29,18 @@ public class Main extends Thread {
 	public static final HashMap<String, Transformer> transformers = new HashMap<>();
 
 	public File inF, outF;
-	public ArrayList<ClassNode> classes = new ArrayList<ClassNode>();
-	public ArrayList<ClassFile> files = new ArrayList<ClassFile>();
-	public HashMap<String, ClassNode> nameToNode = new HashMap<String, ClassNode>();
-	public HashMap<ClassNode, String> nodeToName = new HashMap<ClassNode, String>();
+	public ArrayList<ClassNode> classes = new ArrayList<>();
+	public ArrayList<ClassFile> files = new ArrayList<>();
+	public HashMap<String, ClassNode> nameToNode = new HashMap<>();
+	public HashMap<ClassNode, String> nodeToName = new HashMap<>();
 	public String[] libraries;
-	public ArrayList<Library> loadedAPI = new ArrayList<Library>();
+	public ArrayList<Library> loadedAPI = new ArrayList<>();
 	public String[] usedTransformers;
-	public HashMap<String, Integer> pkgLens = new HashMap<String, Integer>();
+	public HashMap<String, Integer> pkgLens = new HashMap<>();
 	public SmartNameGen nameGen;
 	public String[] args;
 	public CommandLine cmd;
+	public final long startTime = System.currentTimeMillis();
 
 	public static Main getInstance() {
 		return instance;
@@ -78,6 +79,11 @@ public class Main extends Thread {
 		dictionaryArg.setArgName("1/2/3");
 		options.addOption(dictionaryArg);
 
+		Option testArg = new Option( null, "test", false, "Means that no output are written to file");
+
+		testArg.setRequired(false);
+		options.addOption(testArg);
+
 		CommandLineParser parser = new DefaultParser();
 		HelpFormatter formatter = new HelpFormatter();
 
@@ -95,15 +101,17 @@ public class Main extends Thread {
 		if (!(inF = new File(cmd.getOptionValue("input"))).exists())
 			throw new Throwable("Error: Input file does not exist.");
 
-		if ((outF = new File(cmd.getOptionValue("output"))).exists())
+		if (!cmd.hasOption("test") && (outF = new File(cmd.getOptionValue("output"))).exists())
 			throw new Throwable("Error: Output file already exists.");
 
-		ArrayList<String> librariesList = new ArrayList<>();
-		if(cmd.hasOption("libraries"))
+		if(cmd.hasOption("libraries")) {
+			ArrayList<String> librariesList = new ArrayList<>();
 			for (String libraryName1 : cmd.getOptionValues("libraries"))
 				for (String libraryName2 : libraryName1.split(";"))
 					librariesList.add(libraryName2);
-		libraries = librariesList.toArray(new String[librariesList.size()]);
+
+			libraries = librariesList.toArray(new String[librariesList.size()]);
+		}
 
 		ArrayList<String> usedTransformersList = new ArrayList<>();
 		for(String transformerName1 : cmd.getOptionValues("transformers"))
@@ -142,10 +150,6 @@ public class Main extends Thread {
 		transformers.put("TryCatch", new TryCatch());
 	}
 
-	public static boolean isEmpty(MethodNode mn) {
-		return mn.instructions.getFirst() != null;
-	}
-
 	public static void printLogo() {
 		System.out.println("|---------------------------------------------------------------------------|");
 		System.out.println("|   __   __    ______    ______    __   __    ______    ______    ______    |");
@@ -171,21 +175,23 @@ public class Main extends Thread {
 				return;
 			}
 
-			System.out.println("Loading java APIs...");
+			System.out.println("Loading java APIs... " + getDateTag());
 			new DirWalker(new File(System.getProperty("java.home") + File.separatorChar + "lib"), true);
-			System.out.println("Loading user APIs...");
-			for(String lib : libraries)
-				new DirWalker(new File(lib), true);
-			System.out.println("All APIs loaded!");
+			if(libraries != null) {
+				System.out.println("Loading user APIs... " + getDateTag());
+				for (String lib : libraries)
+					new DirWalker(new File(lib), true);
+			}
+			System.out.println("All APIs loaded! " + getDateTag());
 
 			System.out.println("--------------------------------------------------");
 
-			System.out.println("Loading input file...");
+			System.out.println("Loading input file... " + getDateTag());
 			new DirWalker(inF, false);
 
 			System.out.println("--------------------------------------------------");
 
-			System.out.println("Making class tree...");
+			System.out.println("Making class tree... " + getDateTag());
 			CustomClassWriter.loadHierachy();
 
 			ArrayList<ClassNode> modClasses = new ArrayList<>(classes);
@@ -195,14 +201,14 @@ public class Main extends Thread {
 			System.out.println("--------------------------------------------------");
 
 			for(String transformerName : usedTransformers) {
-				System.out.println("Started transformation with " + transformerName + " transformer");
+				System.out.println("Started transformation with " + transformerName + " transformer " + getDateTag());
 
 				try {
 					modClasses = transformers.get(transformerName).obfuscate(modClasses);
 				} catch(NullPointerException npe) {
 					throw new Throwable("Transformer name \"" + transformerName + "\" aren't defined in Main#transformers.", npe);
 				}
-				System.out.println("Transformation completed with " + transformerName + " transformer");
+				System.out.println("Transformation completed with " + transformerName + " transformer " + getDateTag());
 			}
 
 			System.out.println("--------------------------------------------------");
@@ -212,11 +218,16 @@ public class Main extends Thread {
 				dump(cn, true);
 			System.out.println("--------------------------------------------------");
 			System.out.println("All classes dumped! " + getDateTag());
-			System.out.println("Saving all classes...");
-			saveAll();
-			System.out.println("All classes saved!");
+			if(cmd.hasOption("test"))
+				System.out.println("All transformations and dumps went successfully!");
+			else {
+				System.out.println("Saving all classes... " + getDateTag());
+				saveAll();
+				System.out.println("All classes saved! " + getDateTag());
+			}
 		} catch(Throwable t) {
 			System.out.println(t.getMessage());
+			t.printStackTrace();
 		}
 	}
 
@@ -257,10 +268,8 @@ public class Main extends Thread {
 		return className.substring(0, className.lastIndexOf('.'));
 	}
 
-	public static SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
-
-	public static String getDateTag() {
-		return "[" + sdf.format(new Date()) + "]";
+	public String getDateTag() {
+		return "[" + (System.currentTimeMillis() - startTime) + "ms]";
 	}
 
 	public byte[] dump(ClassNode node, boolean autoAdd) {
@@ -299,7 +308,7 @@ public class Main extends Thread {
 
 			return classBytes;
 		} catch(Throwable t) {
-			System.out.println("Error occurred while writing " + node.name + ". This class will be original. Exception: " + t.getMessage());
+			System.out.println("Error occurred while writing " + node.name + ". This class will not be written. Exception: " + t.getMessage());
 		}
 		return null;
 	}
@@ -307,38 +316,8 @@ public class Main extends Thread {
 	public void saveAll() throws Throwable {
 		outF.createNewFile();
 		ZipOutputStream out = new ZipOutputStream(new FileOutputStream(outF));
-		/* Start of combination of jar's */
-		ZipFile zf = new ZipFile(inF);
-		Enumeration<? extends ZipEntry> in = zf.entries();
-
 		byte[] data;
 
-		while (in.hasMoreElements()) {
-			ZipEntry ze = in.nextElement();
-			boolean finded = false;
-
-			for(ClassFile mc : files)
-				if (mc != null && ze != null && mc.name != null && ze.getName() != null
-						&& mc.name.equals(ze.getName())) {
-					finded = true;
-					break;
-				}
-
-			if (zf != null && ze != null && !finded) {
-				DataInputStream dis = new DataInputStream(zf.getInputStream(ze));
-				data = new byte[(int) ze.getSize()];
-				dis.readFully(data);
-				dis.close();
-
-				ze = modifyEntry(new ZipEntry(ze.getName()));
-
-				out.putNextEntry(ze);
-				out.write(data, 0, data.length);
-				out.closeEntry();
-			}
-		}
-		zf.close();
-		/* End of combination of jar's */
 		for(ClassFile mc : files)
 			try {
 				data = mc.bytecode;

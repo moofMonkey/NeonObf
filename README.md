@@ -22,7 +22,7 @@ Skype: moofMonkey
 
 Discord: moofMonkey#9729
 
-VK: https://new.vk.com/moofmonkey.java
+VK: https://new.vk.com/m00fy
 
 ## Needed APIs
 ObjectWeb ASM v6.0 (BETA):

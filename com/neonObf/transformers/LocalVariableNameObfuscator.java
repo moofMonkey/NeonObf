@@ -52,9 +52,7 @@ public class LocalVariableNameObfuscator extends Transformer {
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
 		classes.parallelStream().forEach((cn) -> {
 			ExecutorService service = Executors.newCachedThreadPool();
-			((List<MethodNode>) cn.methods).parallelStream().forEach((mn) -> {
-				service.execute(new LocalVariableNameObfuscator(mn));
-			});
+			((List<MethodNode>) cn.methods).parallelStream().forEach(mn -> service.execute(new LocalVariableNameObfuscator(mn)));
 
 			service.shutdown();
 			try {

@@ -269,7 +269,6 @@ public class BasicTypesEncryption extends Transformer {
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
 		SmartNameGen nameGen = Main.getInstance().nameGen;
 
-
 		classes.parallelStream().forEach((cn) -> {
 			ExecutorService service = Executors.newCachedThreadPool();
 
@@ -283,9 +282,7 @@ public class BasicTypesEncryption extends Transformer {
 					cn.name
 				)
 			);
-			((List<MethodNode>)cn.methods).parallelStream().forEach((mn) -> {
-				service.execute(new BasicTypesEncryption(mn, cn, rand.nextLong()));
-			});
+			((List<MethodNode>)cn.methods).parallelStream().forEach(mn -> service.execute(new BasicTypesEncryption(mn, cn, rand.nextLong())));
 
 			service.shutdown();
 			try {
@@ -305,7 +302,7 @@ public class BasicTypesEncryption extends Transformer {
 				AbstractInsnNode next = iterator.next();
 				
 				if (
-					(next.getOpcode() >= LDC && next.getOpcode() <= LDC+2) ||
+					(next.getOpcode() >= LDC && next.getOpcode() <= LDC + 2 /* LDC2_W */) ||
 					next.getOpcode() == BIPUSH ||
 					next.getOpcode() == SIPUSH
 				)

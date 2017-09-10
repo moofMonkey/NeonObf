@@ -79,7 +79,7 @@ public class Main extends Thread {
 		dictionaryArg.setArgName("1/2/3");
 		options.addOption(dictionaryArg);
 
-		Option testArg = new Option( null, "test", false, "Means that no output is written to file");
+		Option testArg = new Option( null, "test", false, "Means that no output are written to file");
 
 		testArg.setRequired(false);
 		options.addOption(testArg);
@@ -148,10 +148,6 @@ public class Main extends Thread {
 		transformers.put("LocalVariableNameObfuscator", new LocalVariableNameObfuscator());
 		transformers.put("SourceFileRemover", new SourceFileRemover());
 		transformers.put("TryCatch", new TryCatch());
-	}
-
-	public static boolean isEmpty(MethodNode mn) {
-		return mn.instructions.getFirst() != null;
 	}
 
 	public static void printLogo() {

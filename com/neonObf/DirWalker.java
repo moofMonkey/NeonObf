@@ -16,7 +16,7 @@ public class DirWalker {
 		if (file.isDirectory()) {
 			if (file.listFiles() != null && !path.endsWith(".donot"))
 				Arrays.stream(file.listFiles())
-						.filter(f -> !(!(f.getName().endsWith(".class") || f.getName().endsWith(".jar") || f.getName().endsWith(".zip")) || f.getName().charAt(0) == '.' || f.getName().charAt(0) == '$' || f.getName().equals("module-info.class")))
+						.filter(f -> f.isDirectory() || !(!(f.getName().endsWith(".class") || f.getName().endsWith(".jar") || f.getName().endsWith(".zip")) || f.getName().charAt(0) == '.' || f.getName().charAt(0) == '$' || f.getName().equals("module-info.class")))
 						.forEach(f -> {
 							try {
 								new DirWalker(f, isLibrary);

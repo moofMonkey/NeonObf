@@ -48,9 +48,7 @@ public class LineNumberObfuscation extends Transformer {
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
 		classes.parallelStream().forEach((cn) -> {
 			ExecutorService service = Executors.newCachedThreadPool();
-			((List<MethodNode>) cn.methods).parallelStream().forEach((mn) -> {
-				service.execute(new LineNumberObfuscation(mn));
-			});
+			((List<MethodNode>) cn.methods).parallelStream().forEach(mn -> service.execute(new LineNumberObfuscation(mn)));
 
 			service.shutdown();
 			try {

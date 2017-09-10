@@ -59,18 +59,17 @@ public class AntiMemoryDump extends Transformer {
 	@Deprecated
 	@Override
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
-		for(int i = 0; i < classes.size(); i++) {
-			ClassNode cn = classes.get(i);
-
+		classes.parallelStream().forEach((cn) -> {
 			ExecutorService service = Executors.newCachedThreadPool();
-			for(MethodNode mn : (List<MethodNode>) cn.methods)
-				service.execute(new AntiMemoryDump(mn));
+			((List<MethodNode>) cn.methods).parallelStream().forEach(mn -> service.execute(new AntiMemoryDump(mn)));
 
 			service.shutdown();
-			service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-
-			classes.set(i, cn);
-		}
+			try {
+				service.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+			} catch(Throwable t) {
+				t.printStackTrace();
+			}
+		});
 
 		return classes;
 	}

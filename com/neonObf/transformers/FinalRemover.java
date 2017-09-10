@@ -14,12 +14,10 @@ public class FinalRemover extends Transformer {
 
 	@Override
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) {
-		classes.parallelStream().forEach((cn) -> {
-			((List<FieldNode>) cn.fields).parallelStream().forEach((fn) -> {
-				if ((fn.access | ACC_FINAL) != 0)
-					fn.access &= ~ACC_FINAL;
-			});
-		});
+		classes.parallelStream().forEach(cn -> ((List<FieldNode>) cn.fields).parallelStream().forEach((fn) -> {
+			if ((fn.access | ACC_FINAL) != 0)
+				fn.access &= ~ACC_FINAL;
+		}));
 
 		return classes;
 	}

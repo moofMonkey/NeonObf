@@ -28,9 +28,7 @@ public class SourceFileRemover extends Transformer {
 	@Override
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) {
 		ExecutorService service = Executors.newCachedThreadPool();
-		classes.parallelStream().forEach((cn) -> {
-			service.execute(new SourceFileRemover(cn));
-		});
+		classes.parallelStream().forEach(cn -> service.execute(new SourceFileRemover(cn)));
 
 		service.shutdown();
 		try {

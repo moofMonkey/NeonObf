@@ -70,11 +70,9 @@ public class TryCatch extends Transformer {
 	
 	@Override
 	public ArrayList<ClassNode> obfuscate(ArrayList<ClassNode> classes) throws Throwable {
-		classes.parallelStream().forEach((cn) -> {
+		classes.parallelStream().forEach(cn -> {
 			ExecutorService service = Executors.newCachedThreadPool();
-			((List<MethodNode>) cn.methods).parallelStream().forEach((mn) -> {
-				service.execute(new TryCatch(mn));
-			});
+			((List<MethodNode>) cn.methods).parallelStream().forEach(mn -> service.execute(new TryCatch(mn)));
 
 			service.shutdown();
 			try {

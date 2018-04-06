@@ -25,12 +25,10 @@ Discord: moofMonkey#9729
 VK: https://new.vk.com/m00fy
 
 ## Needed APIs
-ObjectWeb ASM v6.0 (BETA):
+Maven
 
- - asm-core
- - asm-analysis
- - asm-commons
- - asm-tree
-
-Also:
- - commons-cli
+ - org.ow2.asm:asm:6.0_BETA
+ - org.ow2.asm:asm-analysis:6.0_BETA
+ - org.ow2.asm:asm-commons:6.0_BETA
+ - org.ow2.asm:asm-tree:6.0_BETA
+ - commons-cli:commons-cli:1.4

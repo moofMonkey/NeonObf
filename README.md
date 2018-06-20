@@ -18,7 +18,7 @@ It's highly recommended to use ProGuard with short names obfuscation before Neon
 MIT
 
 ## Communications with author
-Skype: moofMonkey
+Skype: moofMonkey // abandoned, contact me at Discord
 
 Discord: moofMonkey#9729
 

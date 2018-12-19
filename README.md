@@ -20,7 +20,7 @@ MIT
 ## Communications with author
 Skype: moofMonkey // abandoned, contact me at Discord
 
-Discord: moofMonkey#9729
+Discord: <@288327405142147077>
 
 VK: https://new.vk.com/m00fy
 

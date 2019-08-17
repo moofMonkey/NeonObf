@@ -22,8 +22,6 @@ Skype: moofMonkey // abandoned, contact me at Discord
 
 Discord: moofMonkey#1757
 
-VK: https://new.vk.com/m00fy
-
 ## Needed APIs
 Maven
 
